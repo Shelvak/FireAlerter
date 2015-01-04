@@ -8,6 +8,7 @@ module FireAlerter
 
   autoload :Semaphore, lib_path + '/semaphore'
   autoload :Listener,  lib_path + '/listener'
+  autoload :Helpers,   lib_path + '/helpers'
 
   class << self
     def start
