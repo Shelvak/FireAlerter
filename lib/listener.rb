@@ -36,11 +36,11 @@ module FireAlerter
       private
 
         def redis
-          @redis ||= Redis.new
+          Redis.new
         end
 
         def send_data_to_all(msg)
-          sleep 0.1 # For multiple messages on the same devise
+          sleep 0.5 # For multiple messages on the same devise
           $clients.each { |client| client.send_data msg}
         end
 
@@ -81,7 +81,7 @@ module FireAlerter
         def config(opts)
           kind = opts['kind']
 
-          [
+          a = [
             62, 80, 87, 77,
             color_number_for(opts['color']),
             opts['intensity'],
@@ -90,10 +90,12 @@ module FireAlerter
             bool_to_int(kind == 'night'),
             60
           ].map(&:chr).join
+          Helpers.print a
+          a
         end
 
         def color_number_for(color)
-          case color
+          case color.to_s
             when 'red'    then 1
             when 'green'  then 2
             when 'yellow' then 3

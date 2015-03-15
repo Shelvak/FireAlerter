@@ -8,8 +8,12 @@
 # Description:       <DESCRIPTION>
 ### END INIT INFO
 
-ruby=`whereis ruby`
-daemon_file="/Users/rotsen/git/firealerter/daemon.rb"
+ruby=`which ruby`
+if test "$(uname)" = "Darwin"; then
+  daemon_file="/Users/rotsen/git/firealerter/daemon.rb"
+else
+  daemon_file="/home/rotsen/rails/firealerter/daemon.rb"
+fi
 command="$ruby $daemon_file"
 
 start() {
@@ -40,6 +44,7 @@ status(){
 }
 
 running() {
+  echo $command
   if [[ `$command status` =~ \d+ ]];then
     return 0
   else

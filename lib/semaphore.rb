@@ -12,16 +12,22 @@ module FireAlerter
 
       case
         when id = match_keep_alive(data)
-          id_included_in_active_devices?(id[1]) ? send_ok : send_reconnect
+          id_included_in_active_devices?(id[1]) ? send_ok : send_ok #send_reconnect
 
         when matchs = match_presentation(data)
           add_id_to_active_devices! @id = matchs[2]
           send_ok
 
         when data.match(/(ALSOK|PWMOK)/) then nil
+        when data.match(/(dia|noche|reposo|als)/i) then puts data
 
         else
-          say_hi
+          if @la.nil?
+            say_hi
+            @la ||= true
+          else
+            puts data
+          end
       end
     end
 
