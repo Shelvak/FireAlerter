@@ -10,6 +10,34 @@ module FireAlerter
         Thread.new { lights_config_subscribe }
       end
 
+      def lights_start_loop_subscribe!
+        Thread.new { lights_start_loop_subscribe }
+      end
+
+      def lights_stop_loop_subscribe!
+        Thread.new { lights_stop_loop_subscribe }
+      end
+
+      def lights_start_loop_subscribe
+        redis.subscribe('interventions:lights:start_loop') do |on|
+          on.message do |channel, msg|
+            Helpers.print "Redis: #{msg}"
+
+            Loop.start_lights_looper! msg == 'start'
+          end
+        end
+      end
+
+      def lights_stop_loop_subscribe
+        redis.subscribe('interventions:lights:stop_loop') do |on|
+          on.message do |channel, msg|
+            Helpers.print "Redis: #{msg}"
+
+            Looper.stop_lights_looper! if msg == 'stop'
+          end
+        end
+      end
+
       def lights_alert_subscribe
         redis.subscribe('semaphore-lights-alert') do |on|
           on.message do |channel, msg|
