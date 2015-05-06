@@ -1,0 +1,27 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    bugsnag (2.8.6)
+      multi_json (~> 1.0)
+    bugsnag-em (0.1)
+      bugsnag
+      eventmachine
+      lspace (>= 0.13)
+    eventmachine (1.0.7)
+    json (1.8.2)
+    lspace (0.13)
+    multi_json (1.11.0)
+    rake (10.4.2)
+    redis (3.2.1)
+    thread (0.2.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  bugsnag-em
+  eventmachine
+  json
+  rake
+  redis
+  thread

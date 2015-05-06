@@ -1,7 +1,3 @@
-require 'redis'
-require 'eventmachine'
-require 'json'
-
 module FireAlerter
   lib_path = File.expand_path('..', __FILE__)
   $clients = []
@@ -9,20 +5,25 @@ module FireAlerter
   autoload :Semaphore, lib_path + '/semaphore'
   autoload :Listener,  lib_path + '/listener'
   autoload :Helpers,   lib_path + '/helpers'
+  autoload :Looper,   lib_path + '/looper'
 
   class << self
     def start
-      puts "1"
+      puts "Subscribing..."
       Listener.lights_alert_subscribe!
+      puts "Alerts"
       sleep 1
-      puts "2"
       Listener.lights_config_subscribe!
+      puts "Configs"
       sleep 1
-      puts "3"
+      Listener.lights_start_loop_subscribe!
+      puts "Start loop"
+      sleep 1
+      Listener.lights_stop_loop_subscribe!
+      puts "Stop loop"
+      sleep 1
+      puts "Starting server..."
       EventMachine.run { EventMachine.start_server('0.0.0.0', 9800, Semaphore) }
-      puts "Andando =)"
     end
   end
 end
-
-FireAlerter.start ## Village Mod
