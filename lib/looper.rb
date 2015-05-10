@@ -57,7 +57,7 @@ module FireAlerter
 
 
       def redis
-        Redis.new
+        Redis.new(host: $REDIS_HOST)
       end
     end
   end

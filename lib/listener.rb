@@ -64,7 +64,7 @@ module FireAlerter
       private
 
         def redis
-          Redis.new
+          Redis.new(host: $REDIS_HOST)
         end
 
         def send_data_to_all(msg)

@@ -13,4 +13,6 @@ Bugsnag.configure do |config|
    config.release_stage = 'production'
 end
 
+$REDIS_HOST = ENV['REDIS_PORT_6379_TCP_ADDR'] || 'localhost'
+
 FireAlerter.start
