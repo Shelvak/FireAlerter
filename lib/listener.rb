@@ -40,23 +40,39 @@ module FireAlerter
 
       def lights_alert_subscribe
         redis.subscribe('semaphore-lights-alert') do |on|
+          begin
           on.message do |channel, msg|
-            opts = JSON.parse(msg)
-            Helpers.print "Redis: #{opts}"
-            @last_lights_alert = opts
+            begin
+              opts = JSON.parse(msg)
+              Helpers.print "Redis: #{opts}"
+              @last_lights_alert = opts
 
-            send_welf_to_all(opts)
+              send_welf_to_all(opts)
+            rescue => e
+              p "alert adentro => ", e
+            end
+          end
+          rescue => e
+            p "alert ", e
           end
         end
       end
 
       def lights_config_subscribe
         redis.subscribe('configs:lights') do |on|
-          on.message do |channel, msg|
-            opts = JSON.parse(msg)
-            Helpers.print "Redis: #{opts}"
+          begin
+            on.message do |channel, msg|
+              begin
+                opts = JSON.parse(msg)
+                Helpers.print "Redis: #{opts}"
 
-            send_lights_config_to_all(opts)
+                send_lights_config_to_all(opts)
+              rescue => e
+                p "adentro config => ", e
+              end
+            end
+          rescue => e
+            p "config => ", e
           end
         end
       end

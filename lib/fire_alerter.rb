@@ -2,10 +2,10 @@ module FireAlerter
   lib_path = File.expand_path('..', __FILE__)
   $clients = []
 
-  autoload :Semaphore, lib_path + '/semaphore'
-  autoload :Listener,  lib_path + '/listener'
   autoload :Helpers,   lib_path + '/helpers'
+  autoload :Semaphore, lib_path + '/semaphore'
   autoload :Looper,   lib_path + '/looper'
+  autoload :Listener,  lib_path + '/listener'
 
   class << self
     def start
