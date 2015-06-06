@@ -1,14 +1,15 @@
 module FireAlerter
   module Semaphore
     @@active_ids = []
+    $clients_ids ||= {}
 
     def post_init
-      Helpers.print 'Connected'
+      Helpers.log 'Connected'
       $clients << self
     end
 
     def receive_data(data)
-      Helpers.print "Receive: #{data}"
+      Helpers.log "(#{$clients_ids[self.object_id]}) Receive: #{data}"
 
       case
         when id = match_keep_alive(data)
@@ -28,6 +29,7 @@ module FireAlerter
 
     def unbind
       $clients.delete(self)
+      $clients_ids.delete(self.object_id)
       remove_id_from_active_devices!(@id)
     end
 
@@ -43,7 +45,7 @@ module FireAlerter
       end
 
       def presentation_regex
-        />#SEMAFORO\[V(\d+\.\d+.\d+)\]-\((\d{3})\)/
+        />#SEMAFORO\[V(\d+\.\d+.\d+)\]-\((\d{3})\)</
       end
 
       def keep_alive_regex
@@ -51,12 +53,12 @@ module FireAlerter
       end
 
       def say_hi
-        Helpers.print "Say Hi"
+        Helpers.log "Say Hi"
         send_data ">$?<"
       end
 
       def send_ok
-        Helpers.print "Ok"
+        Helpers.log "Ok"
         send_data ">SOK<"
       end
 
@@ -65,13 +67,15 @@ module FireAlerter
       end
 
       def add_id_to_active_devices!(id)
-        Helpers.print "Adding #{id}:Device"
+        Helpers.log "Adding #{id}:Device"
         @@active_ids << id
+        $clients_ids[self.object_id] = id
       end
 
       def remove_id_from_active_devices!(id)
-        Helpers.print "Dropping #{id}:Device"
+        Helpers.log "Dropping #{id}:Device"
         @@active_ids.delete(id)
+        $clients_ids.delete(self.object_id)
       end
 
       def id_included_in_active_devices?(id)

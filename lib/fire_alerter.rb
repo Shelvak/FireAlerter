@@ -4,7 +4,7 @@ module FireAlerter
 
   autoload :Helpers,   lib_path + '/helpers'
   autoload :Semaphore, lib_path + '/semaphore'
-  autoload :Looper,   lib_path + '/looper'
+  autoload :Looper,    lib_path + '/looper'
   autoload :Listener,  lib_path + '/listener'
 
   class << self
@@ -23,6 +23,7 @@ module FireAlerter
       puts "Stop loop"
       sleep 1
       puts "Starting server..."
+      Helpers.log "Server started"
       EventMachine.run { EventMachine.start_server('0.0.0.0', 9800, Semaphore) }
     end
   end

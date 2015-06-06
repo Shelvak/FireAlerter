@@ -21,9 +21,9 @@ module FireAlerter
       def lights_start_loop_subscribe
         redis.subscribe('interventions:lights:start_loop') do |on|
           on.message do |channel, msg|
-            Helpers.print "Redis: #{msg}"
+            Helpers.log "Start Loop Subscriber: #{msg}"
 
-            Loop.start_lights_looper! msg == 'start'
+            Loop.start_lights_looper! if msg == 'start'
           end
         end
       end
@@ -31,7 +31,7 @@ module FireAlerter
       def lights_stop_loop_subscribe
         redis.subscribe('interventions:lights:stop_loop') do |on|
           on.message do |channel, msg|
-            Helpers.print "Redis: #{msg}"
+            Helpers.log "Stop Loop Subscriber: #{msg}"
 
             Looper.stop_lights_looper! if msg == 'stop'
           end
@@ -40,39 +40,31 @@ module FireAlerter
 
       def lights_alert_subscribe
         redis.subscribe('semaphore-lights-alert') do |on|
-          begin
           on.message do |channel, msg|
             begin
               opts = JSON.parse(msg)
-              Helpers.print "Redis: #{opts}"
+              Helpers.log "Alert Subscriber: #{opts}"
               @last_lights_alert = opts
 
               send_welf_to_all(opts)
             rescue => e
-              p "alert adentro => ", e
+              Helpers.error 'Alert Subscriber', e
             end
-          end
-          rescue => e
-            p "alert ", e
           end
         end
       end
 
       def lights_config_subscribe
         redis.subscribe('configs:lights') do |on|
-          begin
-            on.message do |channel, msg|
-              begin
-                opts = JSON.parse(msg)
-                Helpers.print "Redis: #{opts}"
+          on.message do |channel, msg|
+            begin
+              opts = JSON.parse(msg)
+              Helpers.log "Config Subscriber: #{opts}"
 
-                send_lights_config_to_all(opts)
-              rescue => e
-                p "adentro config => ", e
-              end
+              send_lights_config_to_all(opts)
+            rescue => e
+              Helpers.error 'Config Subscriber', e
             end
-          rescue => e
-            p "config => ", e
           end
         end
       end
@@ -125,7 +117,7 @@ module FireAlerter
         def config(opts)
           kind = opts['kind']
 
-          a = [
+          [
             62, 80, 87, 77,
             color_number_for(opts['color']),
             opts['intensity'],
@@ -134,8 +126,6 @@ module FireAlerter
             bool_to_int(kind == 'night'),
             60
           ].map(&:chr).join
-          Helpers.print a
-          a
         end
 
         def color_number_for(color)
