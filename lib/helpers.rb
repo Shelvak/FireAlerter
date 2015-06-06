@@ -13,7 +13,7 @@ module FireAlerter
           "\n" + ex.backtrace.join("\n")
         ].join(' => ')
 
-        `echo -e "#{msg}" >> /logs/firealerter.errors`
+        `echo -en "#{msg}" >> /logs/firealerter.errors`
       end
     end
   end

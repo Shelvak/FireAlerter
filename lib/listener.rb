@@ -21,9 +21,13 @@ module FireAlerter
       def lights_start_loop_subscribe
         redis.subscribe('interventions:lights:start_loop') do |on|
           on.message do |channel, msg|
-            Helpers.log "Start Loop Subscriber: #{msg}"
+            begin
+              Helpers.log "Start Loop Subscriber: #{msg}"
 
-            Loop.start_lights_looper! if msg == 'start'
+              Looper.start_lights_looper! if msg == 'start'
+            rescue => ex
+              Helpers.error 'StartLoop error: ', ex
+            end
           end
         end
       end
@@ -31,9 +35,13 @@ module FireAlerter
       def lights_stop_loop_subscribe
         redis.subscribe('interventions:lights:stop_loop') do |on|
           on.message do |channel, msg|
-            Helpers.log "Stop Loop Subscriber: #{msg}"
+            begin
+              Helpers.log "Stop Loop Subscriber: #{msg}"
 
-            Looper.stop_lights_looper! if msg == 'stop'
+              Looper.stop_lights_looper! if msg == 'stop'
+            rescue => ex
+              Helpers.error 'StopLoop error: ', ex
+            end
           end
         end
       end

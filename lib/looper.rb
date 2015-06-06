@@ -4,11 +4,13 @@ module FireAlerter
       @@looping = nil
 
       def start_lights_looper!
+        stop_lights_looper!
+
         @@looping = Thread.new { lights_looper }
       end
 
       def stop_lights_looper!
-        @@looping.exit
+        @@looping.exit unless @@looping.nil?
       end
 
       def lights_looper
