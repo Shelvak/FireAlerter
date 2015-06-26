@@ -85,7 +85,7 @@ module FireAlerter
 
         def send_data_to_all(msg)
           sleep 0.5 # For multiple messages on the same devise
-          $clients.each { |client| client.send_data msg}
+          $clients.each { |client| client.connection.send_data msg}
         end
 
         def send_welf_to_all(msg)

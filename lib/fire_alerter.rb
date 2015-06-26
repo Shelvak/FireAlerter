@@ -1,11 +1,11 @@
 module FireAlerter
-  lib_path = File.expand_path('..', __FILE__)
-  $clients = []
+  $lib_path = File.expand_path('..', __FILE__)
+  $clients = {}
 
-  autoload :Helpers,   lib_path + '/helpers'
-  autoload :Semaphore, lib_path + '/semaphore'
-  autoload :Looper,    lib_path + '/looper'
-  autoload :Listener,  lib_path + '/listener'
+  autoload :Helpers,           $lib_path + '/helpers'
+  autoload :DevicesConnection, $lib_path + '/devices_connection'
+  autoload :Looper,            $lib_path + '/looper'
+  autoload :Listener,          $lib_path + '/listener'
 
   class << self
     def start
@@ -24,7 +24,7 @@ module FireAlerter
       sleep 1
       puts "Starting server..."
       Helpers.log "Server started"
-      EventMachine.run { EventMachine.start_server('0.0.0.0', 9800, Semaphore) }
+      EventMachine.run { EventMachine.start_server('0.0.0.0', 9800, DevicesConnection) }
     end
   end
 end
