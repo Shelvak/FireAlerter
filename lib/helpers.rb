@@ -3,19 +3,27 @@ module FireAlerter
     class << self
       @@logs_path = nil
 
-      def log(string)
-        `echo "#{time_now} => #{string}" >> #{logs_path}/firealerter.log`
+      def log(string = '')
+        begin
+          `echo "#{time_now} => #{string.to_s}" >> #{logs_path}/firealerter.log`
+        rescue => ex
+          p ex.backtrace.join("\n")
+        end
       end
 
       def error(string, ex)
-        msg = [
-          time_now,
-          string,
-          ex.message,
-          "\n" + ex.backtrace.join("\n")
-        ].join(' => ')
+        begin
+          msg = [
+            time_now,
+            string,
+            ex.message,
+            "\n" + ex.backtrace.join("\n")
+          ].join(' => ')
 
-        `echo -en "#{msg}" >> #{logs_path}/firealerter.errors`
+          `echo -en "#{msg}" >> #{logs_path}/firealerter.errors`
+        rescue => ex
+          p ex.backtrace.join("\n")
+        end
       end
 
       def time_now
@@ -30,7 +38,7 @@ module FireAlerter
         @@logs_path ||= if File.writable_real?('/logs')
                           '/logs'
                       else
-                        logs_path = File.join($lib_path, 'logs')
+                        logs_path = File.join('..', $lib_path, 'logs')
                         system("mkdir -p #{logs_path}")
 
                         logs_path

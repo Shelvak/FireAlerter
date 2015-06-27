@@ -1,5 +1,6 @@
 module FireAlerter
   module DevicesConnection
+    require 'pry-nav'
 
     def post_init
       Helpers.log "#{device} connected"
@@ -31,7 +32,9 @@ module FireAlerter
     private
 
       def match_ok_data?(data)
-        device_exist? && data.match(/(ALSOK|PWMOK)/)
+        device_exist? && data.match(
+          /(ALSOK|PWMOK|COK|HORAOK|CPPOK|CPIOK|CPCOK|ALCOK)/
+        )
       end
 
       def match_keep_alive?(data)

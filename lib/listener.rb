@@ -83,13 +83,27 @@ module FireAlerter
           Redis.new(host: $REDIS_HOST)
         end
 
-        def send_data_to_all(msg)
+        def send_data_to_lights(msg)
           sleep 0.5 # For multiple messages on the same devise
-          $clients.each { |client| client.connection.send_data msg}
+          light_clients.each { |client| client.connection.send_data msg }
+        end
+
+        def send_data_to_consoles(msg)
+          sleep 0.5 # For multiple messages on the same devise
+          console_clients.each { |client| client.connection.send_data msg }
+        end
+
+        def light_clients
+          $clients.map { |id, c| c if c.name == 'SEMAFORO' }.compact
+        end
+
+        def console_clients
+          $clients.map { |id, c| c if c.name == 'CONSOLA' }.compact
         end
 
         def send_welf_to_all(msg)
-          send_data_to_all welf(msg)
+          send_data_to_lights lights_welf(msg)
+          send_data_to_consoles console_welf(msg)
         end
 
         def send_lights_config_to_all(msg)
@@ -103,7 +117,7 @@ module FireAlerter
           end
         end
 
-        def welf(opts)
+        def lights_welf(opts)
           opts['welf'] ||
           [
             62, 65, 76, 83,
@@ -121,6 +135,22 @@ module FireAlerter
             60
           ].map(&:chr).join
         end
+
+        def console_welf(opts)
+          # ">ALCrgybwts<"
+          [
+            62, 65, 76, 67,
+            bool_to_int(opts['red']),
+            bool_to_int(opts['green']),
+            bool_to_int(opts['yellow']),
+            bool_to_int(opts['blue']),
+            bool_to_int(opts['white']),
+            bool_to_int(opts['trap']),
+            bool_to_int(opts['semaphore']),
+            60
+          ].map(&:chr).join
+        end
+
 
         def config(opts)
           kind = opts['kind']
