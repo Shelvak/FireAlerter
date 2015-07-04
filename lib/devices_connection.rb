@@ -20,6 +20,9 @@ module FireAlerter
           add_id_to_active_devices! *presentation
           send_ok!
 
+        when (welf = welf_recived?(data))
+          treat_welf *welf
+
         else
           say_hi!
       end
@@ -30,6 +33,47 @@ module FireAlerter
     end
 
     private
+
+      def welf_recived?(data)
+        device_exist? && ( match = data.match(/^>CP(\w)(.)<$/) )
+      end
+
+      def treat_welf(_, dev, welf)
+        case dev
+          when 'C' then treat_lights_welf(welf)
+          when 'I' then treat_special_buttons(welf)
+          when 'P' then treat_gates(welf)
+        end
+      end
+
+      def treat_lights_welf(welf)
+        red, green, yellow, blue, white = *welf.bytes
+
+        Helpers.redis.publish(
+          'semaphore-lights-alert',
+          {
+            red: binary_to_bool(red),
+            green: binary_to_bool(green),
+            yellow: binary_to_bool(yellow),
+            blue: binary_to_bool(blue),
+            white: binary_to_bool(white)
+          }
+        )
+
+        send_data '>CPCOK<'
+      end
+
+      def binary_to_bool(binary)
+        binary == 1
+      end
+
+      def treat_special_buttons(welf)
+
+      end
+
+      def treat_gates(welf)
+
+      end
 
       def match_ok_data?(data)
         device_exist? && data.match(

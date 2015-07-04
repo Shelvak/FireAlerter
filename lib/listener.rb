@@ -19,7 +19,7 @@ module FireAlerter
       end
 
       def lights_start_loop_subscribe
-        redis.subscribe('interventions:lights:start_loop') do |on|
+        Helpers.redis.subscribe('interventions:lights:start_loop') do |on|
           on.message do |channel, msg|
             begin
               Helpers.log "Start Loop Subscriber: #{msg}"
@@ -33,7 +33,7 @@ module FireAlerter
       end
 
       def lights_stop_loop_subscribe
-        redis.subscribe('interventions:lights:stop_loop') do |on|
+        Helpers.redis.subscribe('interventions:lights:stop_loop') do |on|
           on.message do |channel, msg|
             begin
               Helpers.log "Stop Loop Subscriber: #{msg}"
@@ -47,7 +47,7 @@ module FireAlerter
       end
 
       def lights_alert_subscribe
-        redis.subscribe('semaphore-lights-alert') do |on|
+        Helpers.redis.subscribe('semaphore-lights-alert') do |on|
           on.message do |channel, msg|
             begin
               opts = JSON.parse(msg)
@@ -63,7 +63,7 @@ module FireAlerter
       end
 
       def lights_config_subscribe
-        redis.subscribe('configs:lights') do |on|
+        Helpers.redis.subscribe('configs:lights') do |on|
           on.message do |channel, msg|
             begin
               opts = JSON.parse(msg)
@@ -78,10 +78,6 @@ module FireAlerter
       end
 
       private
-
-        def redis
-          Redis.new(host: $REDIS_HOST)
-        end
 
         def send_data_to_lights(msg)
           sleep 0.5 # For multiple messages on the same devise

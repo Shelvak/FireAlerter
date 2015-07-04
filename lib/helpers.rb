@@ -26,6 +26,10 @@ module FireAlerter
         end
       end
 
+      def redis
+        Redis.new(host: $REDIS_HOST)
+      end
+
       def time_now
         # Argentina Offset
         (Time.now.utc - 10800).strftime('%H:%M:%S')

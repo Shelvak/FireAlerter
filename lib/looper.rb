@@ -25,7 +25,7 @@ module FireAlerter
         }
 
         kind_with_time.each do |kind, time|
-          redis.lrange('interventions:' + kind, 0, -1).uniq.each do |id|
+          Helpers.redis.lrange('interventions:' + kind, 0, -1).uniq.each do |id|
             send_intervention_lights!(id)
             sleep time
           end
@@ -36,30 +36,25 @@ module FireAlerter
       end
 
       def send_intervention_lights!(id)
-        if (lights = redis.get('interventions:' + id.to_s))
-          redis.publish('semaphore-lights-alert', lights)
+        if (lights = Helpers.redis.get('interventions:' + id.to_s))
+          Helpers.redis.publish('semaphore-lights-alert', lights)
         end
       end
 
       def high_emergency_time
-        redis.get('interventions:time:high_emergency') || 10
+        Helpers.redis.get('interventions:time:high_emergency') || 10
       end
 
       def high_urgency_time
-        redis.get('interventions:time:high_urgency') || 7
+        Helpers.redis.get('interventions:time:high_urgency') || 7
       end
 
       def low_emergency_time
-        redis.get('interventions:time:low_emergency') || 5
+        Helpers.redis.get('interventions:time:low_emergency') || 5
       end
 
       def low_urgency_time
-        redis.get('interventions:time:low_urgency') || 2
-      end
-
-
-      def redis
-        Redis.new(host: $REDIS_HOST)
+        Helpers.redis.get('interventions:time:low_urgency') || 2
       end
     end
   end
