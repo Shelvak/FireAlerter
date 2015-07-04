@@ -47,16 +47,16 @@ module FireAlerter
       end
 
       def treat_lights_welf(welf)
-        red, green, yellow, blue, white = *welf.bytes
+        red, green, yellow, blue, white = *welf.bytes.map { |b| binary_to_bool(b) }
 
         Helpers.redis.publish(
           'semaphore-lights-alert',
           {
-            red: binary_to_bool(red),
-            green: binary_to_bool(green),
-            yellow: binary_to_bool(yellow),
-            blue: binary_to_bool(blue),
-            white: binary_to_bool(white)
+            red:    red,
+            green:  green,
+            yellow: yellow,
+            blue:   blue,
+            white:  white
           }
         )
 
@@ -68,11 +68,19 @@ module FireAlerter
       end
 
       def treat_special_buttons(welf)
+        _trap, semaphore, hooter, *welf.bytes
+        p "trap, semaphore, hooter", _trap, semaphore, hooter
 
+        ## do something
+        send_data '>CPIOK<'
       end
 
       def treat_gates(welf)
+        gate1, gate2, gate3, gate4 = *welf.bytes
+        p "gate 1..4: " gate1, gate2, gate3, gate4
 
+        ## do something
+        send_data '>CPPOK<'
       end
 
       def match_ok_data?(data)
