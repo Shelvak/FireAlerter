@@ -5,7 +5,8 @@ module FireAlerter
 
       def log(string = '')
         begin
-          `echo "#{time_now} => #{string.to_s}" >> #{logs_path}/firealerter.log`
+          str = transliterate_the_byte(string)
+          `echo "#{time_now} => #{str}" >> #{logs_path}/firealerter.log`
         rescue => ex
           p ex.backtrace.join("\n")
         end
@@ -13,9 +14,10 @@ module FireAlerter
 
       def error(string, ex)
         begin
+          str = transliterate_the_byte(string)
           msg = [
             time_now,
-            string,
+            str,
             ex.message,
             "\n" + ex.backtrace.join("\n")
           ].join(' => ')
@@ -47,6 +49,13 @@ module FireAlerter
 
                         logs_path
                       end
+
+        p @@logs_path
+        @@logs_path
+      end
+
+      def transliterate_the_byte(string)
+        string.bytes.map { |b| b < 10 ? b : b.chr }.join
       end
     end
   end

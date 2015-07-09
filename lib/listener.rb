@@ -103,7 +103,7 @@ module FireAlerter
         end
 
         def send_lights_config_to_all(msg)
-          send_data_to_all config(msg)
+          send_data_to_lights  config(msg)
           resend_last_alert
         end
 

@@ -35,7 +35,9 @@ module FireAlerter
     private
 
       def welf_recived?(data)
-        device_exist? && ( match = data.match(/^>CP(\w)(.)<$/) )
+        if device_exist? && ( match = data.match(/>CP(\w)(.*)</) )
+          match
+        end
       end
 
       def treat_welf(_, dev, welf)
@@ -68,7 +70,7 @@ module FireAlerter
       end
 
       def treat_special_buttons(welf)
-
+        puts welf
       end
 
       def treat_gates(welf)
