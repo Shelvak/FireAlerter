@@ -35,6 +35,7 @@ module FireAlerter
     private
 
       def welf_recived?(data)
+        binding.pry
         if device_exist? && ( match = data.match(/>CP(\w)(.*)</) )
           match
         end
