@@ -7,6 +7,7 @@ require 'json'
 require 'thread'
 require 'bugsnag-em'
 require 'pry-nav'
+require 'net/http'
 require File.expand_path('../lib/ruby_hacks', __FILE__)
 require File.expand_path('../lib/fire_alerter', __FILE__)
 

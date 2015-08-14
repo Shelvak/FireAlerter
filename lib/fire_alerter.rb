@@ -6,6 +6,7 @@ module FireAlerter
   autoload :DevicesConnection, $lib_path + '/devices_connection'
   autoload :Looper,            $lib_path + '/looper'
   autoload :Listener,          $lib_path + '/listener'
+  autoload :Crons,             $lib_path + '/crons'
 
   class << self
     def start

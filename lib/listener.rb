@@ -77,7 +77,81 @@ module FireAlerter
         end
       end
 
+      def lcd_subscribe
+        Helpers.redis.subscribe('lcd-messages') do |on|
+          on.message do |channel, msg|
+            begin
+              opts = JSON.parse(msg)
+              Helpers.log "LCD Subscriber: #{opts}"
+
+              send_msg_to_lcds(opts)
+            rescue => e
+              Helpers.error 'LCD Subscriber', e
+            end
+          end
+        end
+      end
+
+      def broadcast_subscribe
+        # The only object for this is clean the clients buffer
+        # anything that we send for the channel will send the sign
+        Helpers.redis.subscribe('clean-broadcast-buffers') do |on|
+          on.message do |channel, msg|
+            begin
+              Helpers.log 'Bradcast cleaner triggered'
+
+              clean_broadcast_buffers!
+            rescue => e
+              Helpers.error 'Broadcast Subscriber', e
+            end
+          end
+        end
+      end
+
       private
+
+        def clean_broadcast_buffers!
+          broadcast_clients.each do |client|
+            client.connection.send_data('>clear_the_milonga<') # change for the fucking welf
+          end
+        end
+
+        def broadcast_clients
+          @clients.map { |id, c| c if broadcast_compatibility?(c) }.compact
+        end
+
+        def broadcast_compatibility(client)
+          client.name == 'SEMAFORO'
+        end
+
+        def send_msg_to_lcds(opts)
+          msgs = opts.map do |line, msg|
+            case
+              when line == 'full'
+                ">LCD[#{msg}]<"
+              when line == 'line1'
+                ">LCD1[#{msg[0..19]}]<"
+              when line == 'line2'
+                ">LCD2[#{msg[0..19]}]<"
+              when line == 'line3'
+                ">LCD3[#{msg[0..19]}]<"
+              when line == 'line4'
+                ">LCD4[#{msg[0..19]}]<"
+            end
+          end
+
+          lcd_clients.each do |client|
+            msgs.each { |msg| client.connection.send_data(msg); sleep 1 }
+          end
+        end
+
+        def lcd_clients
+          $clients.map { |id, c| c if lcd_compatibility?(c) }.compact
+        end
+
+        def lcd_compatibility?(connection)
+          connection.name == 'CONSOLA'
+        end
 
         def send_data_to_lights(msg)
           sleep 0.5 # For multiple messages on the same devise
@@ -103,8 +177,28 @@ module FireAlerter
         end
 
         def send_lights_config_to_all(msg)
-          send_data_to_all config(msg)
+          light_config = config(msg)
+
+          save_last_lights_config(msg, light_config)
+          send_data_to_lights light_config
           resend_last_alert
+        end
+
+        def save_last_lights_config(opts, config_msg)
+          kind_ket = 'lights-config-' + opts['kind']
+          color = opts['color']
+
+          if (kind_config = Helpers.redis.get(kind))
+            config = JSON.parse(kind_config)
+            config[color] = config_msg
+          else
+            config = { color => '' }
+          end
+
+          Helpers.redis.set(
+            kind_key,
+            config.to_json
+          )
         end
 
         def resend_last_alert

@@ -3,15 +3,15 @@ module FireAlerter
     require 'pry-nav'
 
     def post_init
-      Helpers.log "#{device} connected"
+      Helpers.log "#{device_to_s} connected"
     end
 
     def receive_data(data)
-      Helpers.log "#{device} Receive: #{data}"
+      Helpers.log "#{device_to_s} Receive: #{data}"
 
       case
         when match_keep_alive?(data)
-          send_ok!
+          send_ok_or_time!
 
         when match_ok_data?(data)
           nil
@@ -35,7 +35,9 @@ module FireAlerter
     private
 
       def welf_recived?(data)
-        device_exist? && ( match = data.match(/^>CP(\w)(.)<$/) )
+        if device_exist? && ( match = data.match(/>CP(\w)(.*)</) )
+          match
+        end
       end
 
       def treat_welf(_, dev, welf)
@@ -49,8 +51,7 @@ module FireAlerter
       def treat_lights_welf(welf)
         red, green, yellow, blue, white = *welf.bytes.map { |b| binary_to_bool(b) }
 
-        Helpers.redis.publish(
-          'semaphore-lights-alert',
+        Helpers.send_new_intervention_to_app(
           {
             red:    red,
             green:  green,
@@ -68,7 +69,7 @@ module FireAlerter
       end
 
       def treat_special_buttons(welf)
-        _trap, semaphore, hooter, *welf.bytes
+        _trap, semaphore, hooter = *welf.bytes
         p "trap, semaphore, hooter", _trap, semaphore, hooter
 
         ## do something
@@ -77,7 +78,7 @@ module FireAlerter
 
       def treat_gates(welf)
         gate1, gate2, gate3, gate4 = *welf.bytes
-        p "gate 1..4: " gate1, gate2, gate3, gate4
+        p "gate 1..4: ", gate1, gate2, gate3, gate4
 
         ## do something
         send_data '>CPPOK<'
@@ -85,7 +86,7 @@ module FireAlerter
 
       def match_ok_data?(data)
         device_exist? && data.match(
-          /(ALSOK|PWMOK|COK|HORAOK|CPPOK|CPIOK|CPCOK|ALCOK)/
+          /(ALSOK|PWMOK|COK|HORAOK|CPPOK|CPIOK|CPCOK|ALCOK|HORAOK)/
         )
       end
 
@@ -126,11 +127,11 @@ module FireAlerter
       end
 
       def device
-        if (dev = $clients[self.object_id])
-          "(#{ [dev.name, dev.id].join('-') })"
-        else
-          ''
-        end
+        $clients[self.object_id]
+      end
+
+      def device_to_s
+        device ? "(#{ [device.name, device.id].join('-') })" : ''
       end
 
       def say_hi!
@@ -151,17 +152,35 @@ module FireAlerter
           connection: self
         )
 
-        Helpers.log "#{device} added"
+        Helpers.log "#{device_to_s} added"
+        Crons.send_lights_config_to!(device)
       end
 
       def remove_device_from_active_clients!
-        Helpers.log "#{device} dropped"
+        Helpers.log "#{device_to_s} dropped"
 
         $clients.delete(self.object_id)
       end
 
       def device_exist?
         $clients.keys.include?(self.object_id)
+      end
+
+      def client_timer?
+        device_name == 'CONSOLA'
+      end
+
+      def send_time!
+        Helpers.log 'Timing'
+        send_data Helpers.time_now.strftime('>HORA[%H:%m-%d/%m/%Y]<')
+      end
+
+      def send_ok_or_time!
+        if [true, false].sample && client_timer?
+          send_time!
+        else
+          send_ok!
+        end
       end
   end
 end

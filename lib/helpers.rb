@@ -5,7 +5,8 @@ module FireAlerter
 
       def log(string = '')
         begin
-          `echo "#{time_now} => #{string.to_s}" >> #{logs_path}/firealerter.log`
+          str = transliterate_the_byte(string)
+          `echo "#{time_now_to_s} => #{str}" >> #{logs_path}/firealerter.log`
         rescue => ex
           p ex.backtrace.join("\n")
         end
@@ -13,9 +14,10 @@ module FireAlerter
 
       def error(string, ex)
         begin
+          str = transliterate_the_byte(string)
           msg = [
-            time_now,
-            string,
+            time_now_to_s,
+            str,
             ex.message,
             "\n" + ex.backtrace.join("\n")
           ].join(' => ')
@@ -30,9 +32,13 @@ module FireAlerter
         Redis.new(host: $REDIS_HOST)
       end
 
+      def time_now_to_s
+        time_now.strftime('%H:%M:%S')
+      end
+
       def time_now
         # Argentina Offset
-        (Time.now.utc - 10800).strftime('%H:%M:%S')
+        Time.now.utc - 10800
       end
 
       def logs_path
@@ -47,6 +53,20 @@ module FireAlerter
 
                         logs_path
                       end
+
+        p @@logs_path
+        @@logs_path
+      end
+
+      def transliterate_the_byte(string)
+        string.bytes.map { |b| b < 10 ? b : b.chr }.join
+      end
+
+      def send_new_intervention_to_app(colors)
+        host = ENV['firehouse_host'] || 'localhost:3000'
+        uri = URI.parse("http://#{host}/interventions/console_create")
+        uri.query = URI.encode_www_form({lights: colors})
+        Net::HTTP.get(uri)
       end
     end
   end
