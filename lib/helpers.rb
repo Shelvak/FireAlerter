@@ -6,7 +6,10 @@ module FireAlerter
       def log(string = '')
         begin
           str = transliterate_the_byte(string)
-          `echo "#{time_now_to_s} => #{str}" >> #{logs_path}/firealerter.log`
+          File.open("#{logs_path}/firealerter.log", 'ab') do |f|
+            f.write([time_now_to_s, str].join(' => '))
+            f.write("\n")
+          end
         rescue => ex
           error(str, ex)
         end
@@ -22,7 +25,7 @@ module FireAlerter
             "\n" + ex.backtrace.join("\n")
           ].join(' => ')
 
-          `echo -en "#{msg}" >> #{logs_path}/firealerter.errors`
+          File.open("#{logs_path}/firealerter.errors", 'a') { |f| f.write("#{msg}\n") }
         rescue => ex
           puts ex.backtrace.join("\n")
         end
@@ -44,7 +47,7 @@ module FireAlerter
       def create_intervention(colors)
         data = colors.map {|k, v| "-d #{k}=#{v} " }.join
 
-        `curl -X GET #{FIREHOUSE_HOST}/create_via_console #{data}`
+        `curl -X GET #{$FIREHOUSE_HOST}/console_create #{data}`
       end
 
       def logs_path

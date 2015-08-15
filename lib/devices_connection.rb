@@ -51,7 +51,7 @@ module FireAlerter
       def treat_lights_welf(welf)
         red, green, yellow, blue, white = *welf.bytes.map { |b| binary_to_bool(b) }
 
-        unless [red, green, yellow, blue, white].all? { |b| b == 0 }
+        if [red, green, yellow, blue, white].any? { |b| b == true }
           Helpers.create_intervention(
             {
               red:    red,
