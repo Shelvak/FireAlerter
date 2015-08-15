@@ -35,7 +35,6 @@ module FireAlerter
     private
 
       def welf_recived?(data)
-        binding.pry
         if device_exist? && ( match = data.match(/>CP(\w)(.*)</) )
           match
         end
@@ -52,15 +51,17 @@ module FireAlerter
       def treat_lights_welf(welf)
         red, green, yellow, blue, white = *welf.bytes.map { |b| binary_to_bool(b) }
 
-        Helpers.send_new_intervention_to_app(
-          {
-            red:    red,
-            green:  green,
-            yellow: yellow,
-            blue:   blue,
-            white:  white
-          }
-        )
+        unless [red, green, yellow, blue, white].all? { |b| b == 0 }
+          Helpers.create_intervention(
+            {
+              red:    red,
+              green:  green,
+              yellow: yellow,
+              blue:   blue,
+              white:  white
+            }
+          )
+        end
 
         send_data '>CPCOK<'
       end
@@ -80,6 +81,7 @@ module FireAlerter
       def treat_gates(welf)
         gate1, gate2, gate3, gate4 = *welf.bytes
         p "gate 1..4: ", gate1, gate2, gate3, gate4
+        puts welf
 
         ## do something
         send_data '>CPPOK<'

@@ -8,7 +8,7 @@ module FireAlerter
           str = transliterate_the_byte(string)
           `echo "#{time_now_to_s} => #{str}" >> #{logs_path}/firealerter.log`
         rescue => ex
-          p ex.backtrace.join("\n")
+          error(str, ex)
         end
       end
 
@@ -24,7 +24,7 @@ module FireAlerter
 
           `echo -en "#{msg}" >> #{logs_path}/firealerter.errors`
         rescue => ex
-          p ex.backtrace.join("\n")
+          puts ex.backtrace.join("\n")
         end
       end
 
@@ -39,6 +39,12 @@ module FireAlerter
       def time_now
         # Argentina Offset
         Time.now.utc - 10800
+      end
+
+      def create_intervention(colors)
+        data = colors.map {|k, v| "-d #{k}=#{v} " }.join
+
+        `curl -X GET #{FIREHOUSE_HOST}/create_via_console #{data}`
       end
 
       def logs_path
@@ -59,14 +65,7 @@ module FireAlerter
       end
 
       def transliterate_the_byte(string)
-        string.bytes.map { |b| b < 10 ? b : b.chr }.join
-      end
-
-      def send_new_intervention_to_app(colors)
-        host = ENV['firehouse_host'] || 'localhost:3000'
-        uri = URI.parse("http://#{host}/interventions/console_create")
-        uri.query = URI.encode_www_form({lights: colors})
-        Net::HTTP.get(uri)
+        Shellwords.escape(string)
       end
     end
   end
