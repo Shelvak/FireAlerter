@@ -23,6 +23,11 @@ module FireAlerter
       Listener.lights_stop_loop_subscribe!
       puts "Stop loop"
       sleep 1
+      Listener.start_broadcast_subscribe!
+      puts "Start Broadcast"
+      sleep 1
+      Listener.stop_broadcast_subscribe!
+      puts "Stop Broadcast"
       puts "Starting server..."
       Helpers.log "Server started"
       EventMachine.run { EventMachine.start_server('0.0.0.0', 9800, DevicesConnection) }

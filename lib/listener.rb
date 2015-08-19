@@ -18,6 +18,14 @@ module FireAlerter
         Thread.new { lights_stop_loop_subscribe }
       end
 
+      def start_broadcast_subscribe!
+        Thread.new { start_broadcast_subscribe }
+      end
+
+      def stop_broadcast_subscribe!
+        Thread.new { stop_broadcast_subscribe }
+      end
+
       def lights_start_loop_subscribe
         Helpers.redis.subscribe('interventions:lights:start_loop') do |on|
           on.message do |channel, msg|
@@ -92,17 +100,33 @@ module FireAlerter
         end
       end
 
-      def broadcast_subscribe
+      def start_broadcast_subscribe
         # The only object for this is clean the clients buffer
         # anything that we send for the channel will send the sign
-        Helpers.redis.subscribe('clean-broadcast-buffers') do |on|
+        Helpers.redis.subscribe('start-broadcast') do |on|
           on.message do |channel, msg|
             begin
-              Helpers.log 'Bradcast cleaner triggered'
+              Helpers.log 'Starting Broadcast'
 
-              clean_broadcast_buffers!
+              send_signal_to_start_brodcast!
             rescue => e
-              Helpers.error 'Broadcast Subscriber', e
+              Helpers.error 'Starting Broadcast', e
+            end
+          end
+        end
+      end
+
+      def stop_broadcast_subscribe
+        # The only object for this is clean the clients buffer
+        # anything that we send for the channel will send the sign
+        Helpers.redis.subscribe('stop-broadcast') do |on|
+          on.message do |channel, msg|
+            begin
+              Helpers.log 'Stopping Broadcast'
+
+              send_signal_to_stop_brodcast!
+            rescue => e
+              Helpers.error 'Stopping Broadcast', e
             end
           end
         end
@@ -110,9 +134,17 @@ module FireAlerter
 
       private
 
-        def clean_broadcast_buffers!
+        def send_signal_to_start_brodcast!
+          send_msg_to_broadcast_clients('>PLAY<')
+        end
+
+        def send_signal_to_stop_brodcast!
+          send_msg_to_broadcast_clients('>STOP<')
+        end
+
+        def send_msg_to_broadcast_clients(msg)
           broadcast_clients.each do |client|
-            client.connection.send_data('>clear_the_milonga<') # change for the fucking welf
+            client.connection.send_data(msg)
           end
         end
 
