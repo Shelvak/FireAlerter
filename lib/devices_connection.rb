@@ -89,7 +89,7 @@ module FireAlerter
 
       def match_ok_data?(data)
         device_exist? && data.match(
-          /(ALSOK|PWMOK|COK|HORAOK|CPPOK|CPIOK|CPCOK|ALCOK|HORAOK)/
+          /(ok<$)/i
         )
       end
 
