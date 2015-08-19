@@ -149,7 +149,7 @@ module FireAlerter
         end
 
         def broadcast_clients
-          @clients.map { |id, c| c if broadcast_compatibility?(c) }.compact
+          $clients.map { |id, c| c if broadcast_compatibility?(c) }.compact
         end
 
         def broadcast_compatibility(client)
