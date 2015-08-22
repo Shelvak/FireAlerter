@@ -132,6 +132,22 @@ module FireAlerter
         end
       end
 
+      def anything_subscribe
+        # The only object for this is clean the clients buffer
+        # anything that we send for the channel will send the sign
+        Helpers.redis.subscribe('anything') do |on|
+          on.message do |channel, msg|
+            begin
+              Helpers.log "Mandando lo que venga #{msg}"
+
+              $clients.each {|id, c| c.connection.send_data(msg)}
+            rescue => e
+              Helpers.error "Mandando lo que llega #{msg}", e
+            end
+          end
+        end
+      end
+
       private
 
         def send_signal_to_start_brodcast!
