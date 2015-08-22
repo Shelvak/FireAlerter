@@ -132,6 +132,10 @@ module FireAlerter
         end
       end
 
+      def anything_subscribe!
+        Thread.new { anything_subscribe }
+      end
+
       def anything_subscribe
         # The only object for this is clean the clients buffer
         # anything that we send for the channel will send the sign

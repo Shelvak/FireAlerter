@@ -29,7 +29,7 @@ module FireAlerter
       Listener.stop_broadcast_subscribe!
       puts "Stop Broadcast"
       sleep 1
-      Listener.anything_subscribe
+      Listener.anything_subscribe!
       puts "Receiving anything"
       puts "Starting server..."
       Helpers.log "Server started"
