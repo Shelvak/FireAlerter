@@ -9,7 +9,7 @@ module FireAlerter
           transliterate_the_byte(string)
         ].join(' => '))
       rescue => ex
-        error(str, ex)
+        error(string, ex)
       end
 
       def error(string, ex)
@@ -71,7 +71,9 @@ module FireAlerter
       end
 
       def transliterate_the_byte(string)
-        string.each_bytes { |b| (0..10).include?(b) ? b : b.chr }.join
+        transliterated = ''
+        string.each_byte { |b| transliterated += ((0..10).include?(b) ? b : b.chr).to_s }
+        transliterated
       end
     end
   end
