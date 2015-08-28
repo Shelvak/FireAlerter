@@ -4,31 +4,35 @@ module FireAlerter
       @@logs_path = nil
 
       def log(string = '')
-        begin
-          str = transliterate_the_byte(string)
-          File.open("#{logs_path}/firealerter.log", 'ab') do |f|
-            f.write([time_now_to_s, str].join(' => '))
-            f.write("\n")
-          end
-        rescue => ex
-          error(str, ex)
-        end
+        write_in_log([
+          time_now_to_s,
+          transliterate_the_byte(string)
+        ].join(' => '))
+      rescue => ex
+        error(str, ex)
       end
 
       def error(string, ex)
-        begin
-          str = transliterate_the_byte(string)
-          msg = [
-            time_now_to_s,
-            str,
-            ex.message,
-            "\n" + ex.backtrace.join("\n")
-          ].join(' => ')
+        write_in_error_log([
+          time_now_to_s,
+          transliterate_the_byte(string),
+          ex.message,
+          "\n" + ex.backtrace.join("\n")
+        ].join(' => '))
+      rescue => ex
+        puts ex.backtrace.join("\n")
+      end
 
-          File.open("#{logs_path}/firealerter.errors", 'a') { |f| f.write("#{msg}\n") }
-        rescue => ex
-          puts ex.backtrace.join("\n")
-        end
+      def write_msg_in_file(msg, file)
+        File.open(file, 'a') { |f| f.write("#{msg}\n") }
+      end
+
+      def write_in_log(msg)
+        write_msg_in_file(msg, "#{logs_path}/firealerter.log")
+      end
+
+      def write_in_error_log(msg)
+        write_msg_in_file(msg, "#{logs_path}/firealerter.errors")
       end
 
       def redis
@@ -45,7 +49,7 @@ module FireAlerter
       end
 
       def create_intervention(colors)
-        data = colors.map {|k, v| "-d #{k}=#{v} " }.join
+        data = colors.map { |k, v| "-d #{k}=#{v} " }.join
 
         `curl -X GET #{$FIREHOUSE_HOST}/console_create #{data}`
       end
@@ -53,9 +57,9 @@ module FireAlerter
       def logs_path
         return @@logs_path if @@logs_path
 
-        @@logs_path = ENV['logs_path']
-        @@logs_path ||= if File.writable_real?('/logs')
-                          '/logs'
+        logs_path = ENV['logs_path']
+        logs_path ||= if File.writable_real?('/logs')
+                        '/logs'
                       else
                         logs_path = File.join('..', $lib_path, 'logs')
                         system("mkdir -p #{logs_path}")
@@ -63,12 +67,11 @@ module FireAlerter
                         logs_path
                       end
 
-        p @@logs_path
-        @@logs_path
+        @@logs_path = logs_path
       end
 
       def transliterate_the_byte(string)
-        Shellwords.escape(string)
+        string.each_bytes { |b| (0..10).include?(b) ? b : b.chr }.join
       end
     end
   end
