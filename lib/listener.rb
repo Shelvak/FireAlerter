@@ -244,7 +244,8 @@ module FireAlerter
       end
 
       def save_last_lights_config(opts, config_msg)
-        kind_key = 'lights-config-' + opts['kind']
+        kind = opts['kind']
+        kind_key = 'lights-config-' + kind
         color = opts['color']
 
         if (kind_config = Helpers.redis.get(kind))
