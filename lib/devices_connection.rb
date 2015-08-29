@@ -49,6 +49,7 @@ module FireAlerter
     def treat_lights_welf(welf)
       red, green, yellow, blue, white = *welf.bytes.map { |b| binary_to_bool(b) }
 
+      Helpers.log('Activación de consola: ' + [red, green, yellow, blue, white].join(', '))
       if [red, green, yellow, blue, white].any? { |b| b == true }
         Helpers.create_intervention(
           red:    red,
