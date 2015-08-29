@@ -2,38 +2,38 @@ module FireAlerter
   module Listener
     class << self
       def lights_alert_subscribe!
-        puts "Alerts"
+        puts 'Alerts'
         Thread.new { lights_alert_subscribe }
       end
 
       def lights_config_subscribe!
-        puts "Configs"
+        puts 'Configs'
         Thread.new { lights_config_subscribe }
       end
 
       def lights_start_loop_subscribe!
-        puts "Start loop"
+        puts 'Start loop'
         Thread.new { lights_start_loop_subscribe }
       end
 
       def lights_stop_loop_subscribe!
-        puts "Stop loop"
+        puts 'Stop loop'
         Thread.new { lights_stop_loop_subscribe }
       end
 
       def start_broadcast_subscribe!
-        puts "Start Broadcast"
+        puts 'Start Broadcast'
         Thread.new { start_broadcast_subscribe }
       end
 
       def stop_broadcast_subscribe!
-        puts "Stop Broadcast"
+        puts 'Stop Broadcast'
         Thread.new { stop_broadcast_subscribe }
       end
 
 
       def anything_subscribe!
-        puts "Receiving anything"
+        puts 'Receiving anything'
         Thread.new { anything_subscribe }
       end
 
@@ -244,7 +244,8 @@ module FireAlerter
       end
 
       def save_last_lights_config(opts, config_msg)
-        kind_key = 'lights-config-' + opts['kind']
+        kind = opts['kind']
+        kind_key = 'lights-config-' + kind
         color = opts['color']
 
         if (kind_config = Helpers.redis.get(kind))
