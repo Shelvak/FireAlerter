@@ -180,7 +180,7 @@ module FireAlerter
     end
 
     def send_ok_or_time!
-      if (rand * 10) > 9 && client_timer?
+      if (rand * 10) > 7 && client_timer?
         send_time!
       else
         send_ok!
