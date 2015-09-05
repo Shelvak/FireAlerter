@@ -175,8 +175,9 @@ module FireAlerter
     end
 
     def send_time!
-      Helpers.log 'Timing'
-      send_data Helpers.time_now.strftime('>HORA[%H:%M:%S-%d/%m/%Y]<')
+      now = Helpers.time_now.strftime('>HORA[%H:%M:%S-%d/%m/%Y]<')
+      Helpers.log 'Timing = ' + now
+      send_data now
     end
 
     def send_ok_or_time!
