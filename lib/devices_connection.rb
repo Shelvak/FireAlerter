@@ -72,6 +72,10 @@ module FireAlerter
       p 'trap, semaphore, hooter', trap_signal, semaphore, hooter
 
       ## do something
+      if semaphore
+        p 'sending tsem'
+        send_data '>TSEM010<' # cambiar esto por segundos en configuracion
+      end
       send_data '>CPIOK<'
     end
 
@@ -172,7 +176,7 @@ module FireAlerter
 
     def send_time!
       Helpers.log 'Timing'
-      send_data Helpers.time_now.strftime('>HORA[%H:%M-%d/%m/%Y]<')
+      send_data Helpers.time_now.strftime('>HORA[%H:%M:%S-%d/%m/%Y]<')
     end
 
     def send_ok_or_time!
