@@ -31,6 +31,10 @@ module FireAlerter
         Thread.new { stop_broadcast_subscribe }
       end
 
+      def volume_config_subscribe!
+        puts 'Volume subscribe'
+        Thread.new { volume_config_subscribe }
+      end
 
       def anything_subscribe!
         puts 'Receiving anything'
@@ -159,7 +163,30 @@ module FireAlerter
         end
       end
 
+      def volume_config_subscribe
+        # The only object for this is clean the clients buffer
+        # anything that we send for the channel will send the sign
+        Helpers.redis.subscribe('volume-config') do |on|
+          on.message do |_, msg|
+            begin
+              Helpers.log "Volume config at #{msg}%"
+
+              send_volume_to_lights!(msg)
+            rescue => e
+              Helpers.error "Volume config at #{msg}%", e
+            end
+          end
+        end
+      end
+
+
     private
+
+      def send_volume_to_lights!(volume)
+        sleep 0.5
+        msg = ">VOL#{volume.to_i.chr}<"
+        $clients.each { |_, c| c.connection.send_data(msg) }
+      end
 
       def send_signal_to_start_brodcast!
         send_msg_to_broadcast_clients('>PLAY<')

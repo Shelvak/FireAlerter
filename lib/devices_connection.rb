@@ -157,7 +157,7 @@ module FireAlerter
       )
 
       Helpers.log "#{device_to_s} added"
-      Crons.send_lights_config_to!(device)
+      Crons.send_init_config_to!(device)
     end
 
     def remove_device_from_active_clients!
