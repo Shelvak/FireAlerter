@@ -140,6 +140,7 @@ module FireAlerter
               Helpers.log 'Stopping Broadcast'
 
               send_signal_to_stop_brodcast!
+              force_stop_broadcast!
             rescue => e
               Helpers.error 'Stopping Broadcast', e
             end
@@ -181,6 +182,10 @@ module FireAlerter
 
 
     private
+
+      def force_stop_broadcast!
+        Helpers.redis.publish('force-stop-broadcast', 'stop it')
+      end
 
       def send_volume_to_lights!(volume)
         sleep 0.5
@@ -312,16 +317,19 @@ module FireAlerter
       end
 
       def console_welf(opts)
+        # Cuando los semaforos están en reposo la consola se apaga
+        off = opts['sleep'] ? 0 : nil
+
         # ">ALCrgybwts<"
         [
           62, 65, 76, 67,
-          bool_to_int(opts['red']),
-          bool_to_int(opts['green']),
-          bool_to_int(opts['yellow']),
-          bool_to_int(opts['blue']),
-          bool_to_int(opts['white']),
-          bool_to_int(opts['trap']),
-          bool_to_int(opts['semaphore']),
+          bool_to_int(off || opts['red']),
+          bool_to_int(off || opts['green']),
+          bool_to_int(off || opts['yellow']),
+          bool_to_int(off || opts['blue']),
+          bool_to_int(off || opts['white']),
+          bool_to_int(off || opts['trap']),
+          bool_to_int(off || opts['semaphore']),
           60
         ].map(&:chr).join
       end
