@@ -323,13 +323,13 @@ module FireAlerter
         # ">ALCrgybwts<"
         [
           62, 65, 76, 67,
-          bool_to_int(off || opts['red']),
-          bool_to_int(off || opts['green']),
-          bool_to_int(off || opts['yellow']),
-          bool_to_int(off || opts['blue']),
-          bool_to_int(off || opts['white']),
-          bool_to_int(off || opts['trap']),
-          bool_to_int(off || opts['semaphore']),
+          off ||  bool_to_int(opts['red']),
+          off ||  bool_to_int(opts['green']),
+          off ||  bool_to_int(opts['yellow']),
+          off ||  bool_to_int(opts['blue']),
+          off ||  bool_to_int(opts['white']),
+          off ||  bool_to_int(opts['trap']),
+          off ||  bool_to_int(opts['semaphore']),
           60
         ].map(&:chr).join
       end

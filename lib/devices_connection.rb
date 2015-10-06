@@ -83,6 +83,11 @@ module FireAlerter
       gate1, gate2, gate3, gate4 = *welf.bytes
       p 'gate 1..4: ', gate1, gate2, gate3, gate4
       puts welf
+      # Llega CPP
+      # Estados 1 2 y 3
+      # 1 para la derecha [pro-reloj] | abrir
+      # 2 en el medio | reposo
+      # 3 para la izq [contra reloj] | cerrar
 
       ## do something
       send_data '>CPPOK<'
