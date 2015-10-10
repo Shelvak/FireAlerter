@@ -67,6 +67,10 @@ module FireAlerter
       binary == 1
     end
 
+    def semaphore_timeout
+      Helpers.redis.get('configs:semaphore:timeout') || 10
+    end
+
     def treat_special_buttons(welf)
       trap_signal, semaphore, hooter = *welf.bytes
       p 'trap, semaphore, hooter', trap_signal, semaphore, hooter
@@ -74,7 +78,10 @@ module FireAlerter
       ## do something
       if semaphore
         p 'sending tsem'
-        send_data '>TSEM010<' # cambiar esto por segundos en configuracion
+        timeout = semaphore_timeout
+        Helpers.redis.setex('semaphore_is_active', timeout, 1)
+        timeout = '%03d' % timeout
+        send_data ">TSEM#{timeout}<"
       end
       send_data '>CPIOK<'
     end

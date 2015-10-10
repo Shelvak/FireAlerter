@@ -219,9 +219,9 @@ module FireAlerter
         msgs = opts.map do |line, msg|
           case
             when line == 'full'
-              ">LCD[#{msg}]<"
-            when line == 'line1'
-              ">LCD1[#{msg[0..19]}]<"
+              ">LCD[#{(' ' * 20) + msg}]<"
+            #when line == 'line1' # linea 1 siempre con hora
+            #  ">LCD1[#{msg[0..19]}]<"
             when line == 'line2'
               ">LCD2[#{msg[0..19]}]<"
             when line == 'line3'
@@ -318,7 +318,9 @@ module FireAlerter
 
       def console_welf(opts)
         # Cuando los semaforos están en reposo la consola se apaga
-        off = opts['sleep'] ? 0 : nil
+        off, semaphore = if opts['sleep']
+                           [0, semaphore_last_status]
+                         end
 
         # ">ALCrgybwts<"
         [
@@ -329,9 +331,13 @@ module FireAlerter
           off ||  bool_to_int(opts['blue']),
           off ||  bool_to_int(opts['white']),
           off ||  bool_to_int(opts['trap']),
-          off ||  bool_to_int(opts['semaphore']),
+          semaphore ||  bool_to_int(opts['semaphore']),
           60
         ].map(&:chr).join
+      end
+
+      def semaphore_last_status
+        Helpers.redis.get('semaphore_is_active') || 0
       end
 
       def config(opts)
