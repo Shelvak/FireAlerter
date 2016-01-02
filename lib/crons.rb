@@ -36,11 +36,11 @@ module FireAlerter
                     Listener.color_intensity_config_welf(opts)
                   )
                   sleep 1
-                rescue ex =>
+                rescue => ex
                   Helpers.error(ex)
                 end
               end
-            rescue ex =>
+            rescue => ex
               Helpers.error(ex)
             end
           end
