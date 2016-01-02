@@ -22,14 +22,28 @@ module FireAlerter
       def get_last_light_configs(client)
         %w(day night stay).map do |kind|
           if (kind_config = Helpers.redis.get('lights-config-' + kind))
-            # lights-config-kind return => { red: config, green: config}
-            # so we only need to send the config-values
-            JSON.parse(kind_config).values
+            begin
+              # lights-config-kind return => { red: intensity, green: intensity}
+              JSON.parse(kind_config).each do |color, intensity|
+                begin
+                  Helpers.log "Sending to #{client.name} => #{color}: #{intensity}"
+                  opts = {
+                    'kind' => kind,
+                    'color' => color,
+                    'intensity' => intensity
+                  }
+                  client.connection.send_data(
+                    Listener.color_intensity_config_welf(opts)
+                  )
+                  sleep 1
+                rescue ex =>
+                  Helpers.error(ex)
+                end
+              end
+            rescue ex =>
+              Helpers.error(ex)
+            end
           end
-        end.flatten.compact.uniq.each do |config|
-          Helpers.log "Sending to #{client.name} => #{config}"
-          client.connection.send_data(config)
-          sleep 1
         end
       end
     end

@@ -75,7 +75,7 @@ module FireAlerter
             begin
               opts = JSON.parse(msg)
               Helpers.log "Alert Subscriber: #{opts}"
-              @last_lights_alert = opts
+              assign_last_lights_alert(msg)
 
               send_welf_to_all(opts)
             rescue => e
@@ -268,21 +268,22 @@ module FireAlerter
       end
 
       def send_lights_config_to_all(msg)
-        light_config = config(msg)
+        light_config = color_intensity_config_welf(msg)
 
-        save_last_lights_config(msg, light_config)
+        save_last_lights_config(msg)
         send_data_to_lights light_config
         resend_last_alert
       end
 
-      def save_last_lights_config(opts, config_msg)
+      def save_last_lights_config(opts)
         kind = opts['kind']
         kind_key = 'lights-config-' + kind
         color = opts['color']
+        value = opts['intensity']
 
-        if (kind_config = Helpers.redis.get(kind))
+        if (kind_config = Helpers.redis.get(kind_key))
           config = JSON.parse(kind_config)
-          config[color] = config_msg
+          config[color] = value
         else
           config = { color => '' }
         end
@@ -293,8 +294,19 @@ module FireAlerter
         )
       end
 
+      def last_lights_alert
+        last_lights = Helpers.redis.get('last_lights_alert')
+        JSON.parse(last_lights) if last_lights.to_s != ''
+      end
+
+      def assign_last_lights_alert(msg)
+        puts "guardando alert #{msg}"
+        Helpers.redis.set('last_lights_alert', msg)
+      end
+
       def resend_last_alert
-        send_welf_to_all(@last_lights_alert) if @last_lights_alert
+        last_lights = last_lights_alert
+        send_welf_to_all(last_lights) if last_lights
       end
 
       def lights_welf(opts)
@@ -340,7 +352,7 @@ module FireAlerter
         Helpers.redis.get('semaphore_is_active') || 0
       end
 
-      def config(opts)
+      def color_intensity_config_welf(opts)
         kind = opts['kind']
 
         [
