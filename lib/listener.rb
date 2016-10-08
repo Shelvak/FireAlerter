@@ -313,7 +313,7 @@ module FireAlerter
         opts['welf'] ||
           [
             62, 65, 76, 83,
-            0,             # prioridad
+            bool_to_int(opts['priority']),
             0,             # dotacion
             0,             # movil
             bool_to_int(opts['red']),
