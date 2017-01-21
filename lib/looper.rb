@@ -37,7 +37,11 @@ module FireAlerter
 
       def send_intervention_lights!(id)
         if (lights = Helpers.redis.get('interventions:' + id.to_s))
-          Helpers.redis.publish('semaphore-lights-alert', lights)
+          # Remove the priority bit
+          opts = JSON.parse(lights)
+          opts['priority'] = false
+          Helpers.log('Changed priority from ' + lights)
+          Helpers.redis.publish('semaphore-lights-alert', opts.to_json)
         end
       end
 
