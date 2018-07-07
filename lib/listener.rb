@@ -1,6 +1,26 @@
 module FireAlerter
   module Listener
     class << self
+
+      def curl_subscribe!
+        puts 'Curleada'
+        Thread.new { curl_subscribe }
+      end
+
+      def curl_subscribe
+        Helpers.redis.subscribe('curlea-vieja') do |on|
+          on.message do |_, msg|
+            begin
+              Helpers.log "Curleando con #{msg}"
+
+              `curl -X GET #{$FIREHOUSE_HOST}/console_create #{msg}`
+            rescue => ex
+              Helpers.error 'Fallo la curleada: ', ex
+            end
+          end
+        end
+      end
+
       def lights_alert_subscribe!
         puts 'Alerts'
         Thread.new { lights_alert_subscribe }
@@ -203,7 +223,12 @@ module FireAlerter
 
       def send_msg_to_broadcast_clients(msg)
         broadcast_clients.each do |client|
-          client.connection.send_data(msg)
+          begin
+            Helpers.log "Broadcast clients. msg: #{msg} to client: #{client}"
+            client.connection.send_data(msg)
+          rescue => e
+            Helpers.log "Broadcast clients. EXPLOTO TODO VIEJAAAA #{e}"
+          end
         end
       end
 

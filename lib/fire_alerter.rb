@@ -47,6 +47,8 @@ module FireAlerter
       sleep 1
       Listener.volume_config_subscribe!
       sleep 1
+      Listener.curl_subscribe!
+      sleep 1
     end
   end
 end

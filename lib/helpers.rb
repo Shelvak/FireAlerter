@@ -50,9 +50,11 @@ module FireAlerter
 
       def create_intervention(colors)
         data = colors.map { |k, v| "-d #{k}=#{v} " }.join
-        Helpers.log('Curleando de consola: ' + data)
+        # Helpers.log('Curleando de consola: ' + data)
 
-        `curl -X GET #{$FIREHOUSE_HOST}/console_create #{data}`
+        # `curl -X GET #{$FIREHOUSE_HOST}/console_create #{data}`
+
+        Helpers.redis.publish('curlea-vieja', data)
       end
 
       def logs_path
