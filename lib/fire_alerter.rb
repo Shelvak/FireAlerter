@@ -15,7 +15,7 @@ module FireAlerter
       init_alert_and_config
       init_looper
       init_broadcast
-      Listener.anything_subscribe!
+      init_extras
 
       puts 'Starting server...'
       Helpers.log 'Server started'
@@ -47,7 +47,14 @@ module FireAlerter
       sleep 1
       Listener.volume_config_subscribe!
       sleep 1
+      Listener.lcd_subscribe!
+      sleep 1
+    end
+
+    def init_extras
       Listener.curl_subscribe!
+      sleep 1
+      Listener.anything_subscribe!
       sleep 1
     end
   end

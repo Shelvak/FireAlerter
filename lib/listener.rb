@@ -2,35 +2,19 @@ module FireAlerter
   module Listener
     class << self
 
-      def curl_subscribe!
-        puts 'Curleada'
-        Thread.new { curl_subscribe }
-      end
-
-      def curl_subscribe
-        Helpers.redis.subscribe('curlea-vieja') do |on|
-          on.message do |_, msg|
-            begin
-              Helpers.log "Curleando con #{msg}"
-
-              `curl -X GET #{$FIREHOUSE_HOST}/console_create #{msg}`
-            rescue => ex
-              Helpers.error 'Fallo la curleada: ', ex
-            end
-          end
-        end
-      end
-
+      ### Send lights
       def lights_alert_subscribe!
         puts 'Alerts'
         Thread.new { lights_alert_subscribe }
       end
 
+      ### Lights configuration
       def lights_config_subscribe!
         puts 'Configs'
         Thread.new { lights_config_subscribe }
       end
 
+      ### Loop between current interventions
       def lights_start_loop_subscribe!
         puts 'Start loop'
         Thread.new { lights_start_loop_subscribe }
@@ -41,6 +25,7 @@ module FireAlerter
         Thread.new { lights_stop_loop_subscribe }
       end
 
+      ### BROADCAST
       def start_broadcast_subscribe!
         puts 'Start Broadcast'
         Thread.new { start_broadcast_subscribe }
@@ -51,16 +36,33 @@ module FireAlerter
         Thread.new { stop_broadcast_subscribe }
       end
 
+      ### Volume Config
       def volume_config_subscribe!
         puts 'Volume subscribe'
         Thread.new { volume_config_subscribe }
       end
 
+      ### LCD messages
+      def lcd_subscribe!
+        puts 'LCD subscribe'
+        Thread.new { lcd_subscribe }
+      end
+
+      ### Async console intervention creation
+      def curl_subscribe!
+        puts 'CURL Subscribe'
+        Thread.new { curl_subscribe }
+      end
+
+      ### Test welf
       def anything_subscribe!
         puts 'Receiving anything'
         Thread.new { anything_subscribe }
       end
 
+      #####################
+      #### Subscribe method
+      #####################
       def lights_start_loop_subscribe
         Helpers.redis.subscribe('interventions:lights:start_loop') do |on|
           on.message do |_, msg|
@@ -200,8 +202,21 @@ module FireAlerter
         end
       end
 
+      def curl_subscribe
+        Helpers.redis.subscribe('curlea-vieja') do |on|
+          on.message do |_, msg|
+            begin
+              Helpers.log "Curleando con #{msg}"
 
-    private
+              `curl -X GET #{$FIREHOUSE_HOST}/console_create #{msg}`
+            rescue => ex
+              Helpers.error 'Fallo la curleada: ', ex
+            end
+          end
+        end
+      end
+
+      private
 
       def force_stop_broadcast!
         Helpers.redis.publish('force-stop-broadcast', 'stop it')
