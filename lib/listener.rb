@@ -312,7 +312,6 @@ module FireAlerter
 
         save_last_lights_config(msg)
         send_data_to_lights light_config
-        resend_last_alert
       end
 
       def save_last_lights_config(opts)
@@ -344,10 +343,11 @@ module FireAlerter
         Helpers.redis.set('last_lights_alert', msg)
       end
 
-      def resend_last_alert
-        last_lights = last_lights_alert
-        send_welf_to_all(last_lights) if last_lights
-      end
+      # No se pusa mas
+      # def resend_last_alert
+      #   last_lights = last_lights_alert
+      #   send_welf_to_all(last_lights) if last_lights
+      # end
 
       def lights_welf(opts)
         opts['welf'] ||

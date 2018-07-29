@@ -17,18 +17,34 @@ module FireAlerter
         # High Emergency is the most important so... the first
         # Uniq method for any "troll" from redis or by the "coder"
 
-        kind_with_time = {
-          'high:emergency' => high_emergency_time,
-          'high:urgency'   => high_urgency_time,
-          'low:emergency'  => low_emergency_time,
-          'low:urgency'    => low_urgency_time
-        }
+        # kind_with_time = {
+        #   'high:emergency' => high_emergency_time,
+        #   'high:urgency'   => high_urgency_time,
+        #   'low:emergency'  => low_emergency_time,
+        #   'low:urgency'    => low_urgency_time
+        # }
 
-        kind_with_time.each do |kind, time|
-          Helpers.redis.lrange('interventions:' + kind, 0, -1).uniq.each do |id|
-            send_intervention_lights!(id)
-            sleep time
-          end
+
+        # kind_with_time.each do |kind, time|
+        #   Helpers.redis.lrange('interventions:' + kind, 0, -1).uniq.each do |id|
+        #   Helpers.redis.lrange('interventions:' + kind, 0, -1).uniq.each do |id|
+        #     send_intervention_lights!(id)
+        #     sleep time
+        #   end
+        # end
+
+        ids  = Helpers.redis.lrange('interventions:high:emergency', 0, -1).uniq
+        ids += Helpers.redis.lrange('interventions:high:urgency', 0, -1).uniq
+
+        # La idea es solo loopear en high o en low, no en los 2
+        if ids.empty?
+          ids  = Helpers.redis.lrange('interventions:low:emergency', 0, -1).uniq
+          ids += Helpers.redis.lrange('interventions:low:urgency', 0, -1).uniq
+        end
+
+        ids.each do |id|
+          send_intervention_lights!(id)
+          sleep 10
         end
 
         # Recall
@@ -40,6 +56,8 @@ module FireAlerter
           # Remove the priority bit
           opts = JSON.parse(lights)
           opts['priority'] = false
+          opts['day'] = (8..20).include?(Time.now.hour)
+
           Helpers.log('Changed priority from ' + lights)
           Helpers.redis.publish('semaphore-lights-alert', opts.to_json)
         end
