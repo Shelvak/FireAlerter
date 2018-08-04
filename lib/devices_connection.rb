@@ -72,17 +72,30 @@ module FireAlerter
     end
 
     def treat_special_buttons(welf)
+      ::Helpers.log("Llego trama especial #{welf} #{welf.bytes}")
       trap_signal, semaphore, hooter = *welf.bytes
       p 'trap, semaphore, hooter', trap_signal, semaphore, hooter
 
-      ## do something
-      if semaphore
-        p 'sending tsem'
+      if trap_signal.positive? # 1
+        msg = "-X GET #{$FIREHOUSE_HOST}/console_trap_sign"
+        Helpers.redis.publish('async-curl', msg)
+        Helpers.log "Señal de personas atrapadas."
+      end
+
+      if semaphore.positive? # 1
         timeout = semaphore_timeout
         Helpers.redis.setex('semaphore_is_active', timeout, 1)
         timeout = '%03d' % timeout
+
+        Helpers.log "Señal de semaforo. timeout: #{timeout}, mandando TSEM"
         send_data ">TSEM#{timeout}<"
       end
+
+      if hooter.positive? # 1
+        Helpers.log "Señal de sirena mayor.... no hacemos una goma"
+      end
+
+
       send_data '>CPIOK<'
     end
 

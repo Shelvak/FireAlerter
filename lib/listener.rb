@@ -203,12 +203,12 @@ module FireAlerter
       end
 
       def curl_subscribe
-        Helpers.redis.subscribe('curlea-vieja') do |on|
+        Helpers.redis.subscribe('async-curl') do |on|
           on.message do |_, msg|
             begin
-              Helpers.log "Curleando con #{msg}"
+              Helpers.log "Curleando #{msg}"
 
-              `curl -X GET #{$FIREHOUSE_HOST}/console_create #{msg}`
+              `curl #{msg}`
             rescue => ex
               Helpers.error 'Fallo la curleada: ', ex
             end
