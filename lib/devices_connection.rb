@@ -72,7 +72,7 @@ module FireAlerter
     end
 
     def treat_special_buttons(welf)
-      ::Helpers.log("Llego trama especial #{welf} #{welf.bytes}")
+      Helpers.log("Llego trama especial #{welf} #{welf.bytes}")
       trap_signal, semaphore, hooter = *welf.bytes
       p 'trap, semaphore, hooter', trap_signal, semaphore, hooter
 
