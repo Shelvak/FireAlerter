@@ -76,13 +76,13 @@ module FireAlerter
       trap_signal, semaphore, hooter = *welf.bytes
       p 'trap, semaphore, hooter', trap_signal, semaphore, hooter
 
-      if trap_signal.positive? # 1
+      if trap_signal.to_i == 1 # 1
         msg = "-X GET #{$FIREHOUSE_HOST}/console_trap_sign"
         Helpers.redis.publish('async-curl', msg)
         Helpers.log "Señal de personas atrapadas."
       end
 
-      if semaphore.positive? # 1
+      if semaphore.to_i == 1 # 1
         timeout = semaphore_timeout
         Helpers.redis.setex('semaphore_is_active', timeout, 1)
         timeout = '%03d' % timeout
@@ -91,7 +91,7 @@ module FireAlerter
         send_data ">TSEM#{timeout}<"
       end
 
-      if hooter.positive? # 1
+      if hooter.to_i == 1 # 1
         Helpers.log "Señal de sirena mayor.... no hacemos una goma"
       end
 
