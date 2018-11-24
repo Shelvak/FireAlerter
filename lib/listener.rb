@@ -244,7 +244,7 @@ module FireAlerter
       end
 
       def send_volume_to_lights!(volume)
-        sleep 0.5
+        sleep 0.2
         msg = ">VOL#{volume.to_i.chr}<"
         $clients.each { |_, c| c.connection.send_data(msg) }
       end
@@ -306,18 +306,18 @@ module FireAlerter
       end
 
       def send_data_to_lights(msg)
-        sleep 0.5 # For multiple messages on the same devise
+        sleep 0.2 # For multiple messages on the same devise
         light_clients.each { |client| client.connection.send_data msg }
       end
 
       def send_data_to_consoles(msg)
-        sleep 0.5 # For multiple messages on the same devise
+        sleep 0.2 # For multiple messages on the same devise
         console_clients.each { |client| client.connection.send_data msg }
       end
 
       def send_data_to_main_semaphore(msg)
         if (msc = main_semaphore_client)
-          sleep 0.5 # For multiple messages on the same devise
+          sleep 0.2 # For multiple messages on the same devise
           msc.connection.send_data msg
         end
       end
