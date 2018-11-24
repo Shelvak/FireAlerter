@@ -27,8 +27,8 @@ module FireAlerter
     end
 
     def init_broadcast
-      Listener.start_broadcast_subscribe!
-      sleep 1
+      # Listener.start_broadcast_subscribe!
+      # sleep 1
       Listener.stop_broadcast_subscribe!
       sleep 1
     end

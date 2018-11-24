@@ -26,10 +26,10 @@ module FireAlerter
       end
 
       ### BROADCAST
-      def start_broadcast_subscribe!
-        puts 'Start Broadcast'
-        Thread.new { start_broadcast_subscribe }
-      end
+      # def start_broadcast_subscribe!
+      #   puts 'Start Broadcast'
+      #   Thread.new { start_broadcast_subscribe }
+      # end
 
       def stop_broadcast_subscribe!
         puts 'Stop Broadcast'
@@ -137,21 +137,21 @@ module FireAlerter
         end
       end
 
-      def start_broadcast_subscribe
-        # The only object for this is clean the clients buffer
-        # anything that we send for the channel will send the sign
-        Helpers.redis.subscribe('start-broadcast') do |on|
-          on.message do
-            begin
-              Helpers.log 'Starting Broadcast'
+      # def start_broadcast_subscribe
+      #   # The only object for this is clean the clients buffer
+      #   # anything that we send for the channel will send the sign
+      #   Helpers.redis.subscribe('start-broadcast') do |on|
+      #     on.message do
+      #       begin
+      #         Helpers.log 'Starting Broadcast'
 
-              send_signal_to_start_brodcast!
-            rescue => e
-              Helpers.error 'Starting Broadcast', e
-            end
-          end
-        end
-      end
+      #         # send_signal_to_start_brodcast!
+      #       rescue => e
+      #         Helpers.error 'Starting Broadcast', e
+      #       end
+      #     end
+      #   end
+      # end
 
       def stop_broadcast_subscribe
         # The only object for this is clean the clients buffer
@@ -161,7 +161,7 @@ module FireAlerter
             begin
               Helpers.log 'Stopping Broadcast'
 
-              send_signal_to_stop_brodcast!
+              # send_signal_to_stop_brodcast!
               force_stop_broadcast!
             rescue => e
               Helpers.error 'Stopping Broadcast', e
@@ -228,13 +228,13 @@ module FireAlerter
         $clients.each { |_, c| c.connection.send_data(msg) }
       end
 
-      def send_signal_to_start_brodcast!
-        send_msg_to_broadcast_clients('>PLAY<')
-      end
+      # def send_signal_to_start_brodcast!
+      #   send_msg_to_broadcast_clients('>PLAY<')
+      # end
 
-      def send_signal_to_stop_brodcast!
-        send_msg_to_broadcast_clients('>STOP<')
-      end
+      # def send_signal_to_stop_brodcast!
+      #   send_msg_to_broadcast_clients('>STOP<')
+      # end
 
       def send_msg_to_broadcast_clients(msg)
         broadcast_clients.each do |client|
