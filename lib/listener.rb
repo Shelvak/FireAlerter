@@ -60,6 +60,11 @@ module FireAlerter
         Thread.new { anything_subscribe }
       end
 
+      def main_semaphore_subscribe!
+        puts 'Main semaphore'
+        Thread.new { main_semaphore_subscribe }
+      end
+
       #####################
       #### Subscribe method
       #####################
@@ -216,6 +221,22 @@ module FireAlerter
         end
       end
 
+      def main_semaphore_subscribe
+        Helpers.redis.subscribe('main_semaphore_change') do |on|
+          on.message do |_, msg|
+            begin
+              opts = JSON.parse(msg)
+              Helpers.log "Main semaphore change to: #{opts}"
+
+              send_data_to_main_semaphore main_semaphore_welf(opts)
+            rescue => e
+              Helpers.error 'Main semaphore', e
+            end
+          end
+        end
+      end
+
+
       private
 
       def force_stop_broadcast!
@@ -294,11 +315,26 @@ module FireAlerter
         console_clients.each { |client| client.connection.send_data msg }
       end
 
+      def send_data_to_main_semaphore(msg)
+        if (msc = main_semaphore_client)
+          sleep 0.5 # For multiple messages on the same devise
+          msc.connection.send_data msg
+        end
+      end
+
       def light_clients
         $clients.map { |_, c| c if c.name == 'SEMAFORO' }.compact
       end
 
       def console_clients
+        $clients.map { |_, c| c if c.name == 'CONSOLA' }.compact
+      end
+
+      def main_semaphore_client
+        $clients.find { |_, c| c if c.name == 'SEMAFORO' && c.id == '006' }
+      end
+
+      def _clients
         $clients.map { |_, c| c if c.name == 'CONSOLA' }.compact
       end
 
@@ -387,6 +423,18 @@ module FireAlerter
           60
         ].map(&:chr).join
       end
+
+      def main_semaphore_welf(opts)
+        # >APIB1B2<
+
+        [
+          62, 65, 80, 73,
+          bool_to_int(opts['semaphore']),
+          bool_to_int(opts['hooter']),
+          60
+        ].map(&:chr).join
+      end
+
 
       def semaphore_last_status
         Helpers.redis.get('semaphore_is_active') || 0

@@ -11,7 +11,7 @@ module FireAlerter
         when match_keep_alive?(data)
           send_ok_or_time!
 
-        when match_ok_data?(data)
+        when match_ok_data?(data), match_invalid_data?(data)
           nil
 
         when (presentation = match_presentation(data))
@@ -95,6 +95,8 @@ module FireAlerter
         Helpers.log "Señal de sirena mayor.... no hacemos una goma"
       end
 
+      Helpers.log "Publicando cambio en semaforo principal"
+      Helpers.redis.publish('main_semaphore_change', { semaphore: semaphore, hooter: hooter }.to_json)
 
       send_data '>CPIOK<'
     end
@@ -117,6 +119,12 @@ module FireAlerter
       device_exist? && data.match(
         /(ok<$)/i
       )
+    end
+
+    def match_invalid_data?(data)
+      invalid = device_exist? && data.match(/invalid/i)
+      Helpers.log "Recibimos una trama invalida desde #{device_name} => #{data}"
+      invalid
     end
 
     def match_keep_alive?(data)
