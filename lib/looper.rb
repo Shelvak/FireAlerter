@@ -33,16 +33,16 @@ module FireAlerter
         #   end
         # end
 
-        ids  = Helpers.redis.lrange('interventions:high:emergency', 0, -1).uniq
-        ids += Helpers.redis.lrange('interventions:high:urgency', 0, -1).uniq
+        ids  = Helpers.redis.lrange('interventions:high:emergency', 0, -1)
+        ids += Helpers.redis.lrange('interventions:high:urgency', 0, -1)
 
         # La idea es solo loopear en high o en low, no en los 2
         if ids.empty?
-          ids  = Helpers.redis.lrange('interventions:low:emergency', 0, -1).uniq
-          ids += Helpers.redis.lrange('interventions:low:urgency', 0, -1).uniq
+          ids  = Helpers.redis.lrange('interventions:low:emergency', 0, -1)
+          ids += Helpers.redis.lrange('interventions:low:urgency', 0, -1)
         end
 
-        ids.each do |id|
+        ids.uniq.each do |id|
           send_intervention_lights!(id)
           sleep 10
         end
@@ -56,7 +56,7 @@ module FireAlerter
           # Remove the priority bit
           opts = JSON.parse(lights)
           opts['priority'] = false
-          opts['day'] = (8..20).include?(Time.now.hour)
+          opts['day'] = (8..20).include?(Time.now.hour) # TODO: Cambiar esto por el sensor
 
           Helpers.log('Changed priority from ' + lights)
           Helpers.redis.publish('semaphore-lights-alert', opts.to_json)
