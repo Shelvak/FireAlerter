@@ -64,7 +64,7 @@ module FireAlerter
     end
 
     def binary_to_bool(binary)
-      binary == 1
+      binary.to_i == 1
     end
 
     def semaphore_timeout
@@ -73,16 +73,16 @@ module FireAlerter
 
     def treat_special_buttons(welf)
       Helpers.log("Llego trama especial #{welf} #{welf.bytes}")
-      trap_signal, semaphore, hooter = *welf.bytes
+      trap_signal, semaphore, hooter = *welf.bytes.map { |b| binary_to_bool(b) }
       p 'trap, semaphore, hooter', trap_signal, semaphore, hooter
 
-      if trap_signal.to_i == 1 # 1
+      if trap_signal
         msg = "-X GET #{$FIREHOUSE_HOST}/console_trap_sign"
         Helpers.redis.publish('async-curl', msg)
         Helpers.log "Señal de personas atrapadas."
       end
 
-      if semaphore.to_i == 1 # 1
+      if semaphore
         timeout = semaphore_timeout
         Helpers.redis.setex('semaphore_is_active', timeout, 1)
         timeout = '%03d' % timeout
@@ -91,7 +91,7 @@ module FireAlerter
         send_data ">TSEM#{timeout}<"
       end
 
-      if hooter.to_i == 1 # 1
+      if hooter
         Helpers.log "Señal de sirena mayor.... no hacemos una goma"
       end
 
