@@ -317,6 +317,7 @@ module FireAlerter
 
       def send_data_to_main_semaphore(msg)
         if (msc = main_semaphore_client)
+          Helpers.log "Semaforo encontrado, #{msc.inspect} enviando: #{msg}"
           Helpers.log "Semaforo encontrado, enviando: #{msg}"
           sleep 0.2 # For multiple messages on the same devise
           msc.connection.send_data msg
@@ -332,7 +333,7 @@ module FireAlerter
       end
 
       def main_semaphore_client
-        $clients.find { |_, c| c if c.name == 'SEMAFORO' && c.id == '006' }
+        $clients.map { |_, c| c if c.name == 'SEMAFORO' && c.id == '006' }.compact.first
       end
 
       def _clients

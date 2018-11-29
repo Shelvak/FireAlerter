@@ -68,7 +68,7 @@ module FireAlerter
     end
 
     def semaphore_timeout
-      Helpers.redis.get('configs:semaphore:timeout') || 10
+      Helpers.redis.get('configs:semaphore:timeout') || 20
     end
 
     def treat_special_buttons(welf)

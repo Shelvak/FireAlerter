@@ -56,7 +56,7 @@ module FireAlerter
           # Remove the priority bit
           opts = JSON.parse(lights)
           opts['priority'] = false
-          opts['day'] = (8..20).include?(Time.now.hour) # TODO: Cambiar esto por el sensor
+          opts['day'] = (8..19).include?(Time.now.hour) # TODO: Cambiar esto por el sensor
 
           Helpers.log('Changed priority from ' + lights)
           Helpers.redis.publish('semaphore-lights-alert', opts.to_json)
