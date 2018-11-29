@@ -49,6 +49,8 @@ module FireAlerter
       sleep 1
       Listener.lcd_subscribe!
       sleep 1
+      Listener.main_semaphore_subscribe!
+      sleep 1
     end
 
     def init_extras
