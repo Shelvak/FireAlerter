@@ -10,12 +10,11 @@ RUN echo "gem: --no-rdoc --no-ri" >> ~/.gemrc \
     && apk --update add bash openssl zlib tzdata git openssh \
     && gem install bundler
 
-# RUN git clone --depth 1 -v https://github.com/Shelvak/FireAlerter.git /usr/src/firealerter
-RUN mkdir -p /usr/src/firealerter
+RUN git clone --depth 1 https://github.com/Shelvak/FireAlerter.git /usr/src/firealerter
+# RUN mkdir -p /usr/src/firealerter
+# ADD . /usr/src/firealerter/
 
 WORKDIR /usr/src/firealerter
-
-ADD . ./
 
 RUN bundle install --jobs 8
 
