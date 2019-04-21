@@ -2,13 +2,9 @@ require 'rake'
 require 'rubygems'
 require 'bundler/setup'
 require 'bugsnag-em'
+require 'rake/testtask'
 
 require File.expand_path('../lib/fire_alerter', __FILE__)
-
-desc 'Run tests'
-task :test do
-  # TBD
-end
 
 desc 'Start application [Default]'
 task :start do
@@ -31,3 +27,7 @@ task :console do
 end
 
 task default: [:start]
+
+Rake::TestTask.new do |task|
+  task.pattern = 'test/*_test.rb'
+end

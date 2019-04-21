@@ -14,11 +14,15 @@ module FireAlerter
 
       # Ensure device is presented or quit
       unless device
-        Helpers.log 'Asking for presentation, >$?<'
-        send_data '>$?<'
+        if (presentation = match_presentation?(data))
+          add_id_to_active_devices!(*presentation)
+        else
+          Helpers.log 'Asking for presentation, >$?<'
+          send_data '>$?<'
+        end
+
         return
       end
-
 
       case
         when match_keep_alive?(data)
@@ -26,9 +30,6 @@ module FireAlerter
 
         when match_ok_data?(data), match_invalid_data?(data)
           nil
-
-        when (presentation = match_presentation?(data))
-          add_id_to_active_devices!(*presentation)
 
         when (welf = welf_recived?(data))
           treat_welf(*welf)

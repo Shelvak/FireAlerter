@@ -2,6 +2,13 @@ module FireAlerter
   class Client
     attr_accessor :id, :name, :version, :connection
 
+    def initialize(attributes={})
+      self.id         = attributes[:id]
+      self.name       = attributes[:name]
+      self.version    = attributes[:version]
+      self.connection = attributes[:connection]
+    end
+
     ############################################################################
     # CLASS METHODS
     ############################################################################
@@ -22,7 +29,8 @@ module FireAlerter
     end
 
     def self.remove(object_id)
-      Helpers.log "#{to_s} dropped"
+      client = find(object_id)
+      Helpers.log "#{client&.to_s} dropped"
 
       clients.delete(object_id)
     end

@@ -30,11 +30,13 @@ module FireAlerter
 
     puts 'Starting server...'
     Helpers.log 'Server started'
-    EventMachine.run { init_devices_connection }
+    init_devices_connection
   end
 
-  def init_devices_connection
-    EventMachine.start_server('0.0.0.0', 9800, DevicesConnection)
+  def init_devices_connection(port=9800)
+    EventMachine.run {
+      EventMachine.start_server('0.0.0.0', port, DevicesConnection)
+    }
   end
 
   def init_broadcast

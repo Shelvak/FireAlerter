@@ -16,7 +16,7 @@ RUN git clone --depth 1 https://github.com/Shelvak/FireAlerter.git /usr/src/fire
 
 WORKDIR /usr/src/firealerter
 
-RUN bundle install --jobs 8
+RUN bundle install --jobs 8 --without test
 
 VOLUME ["/logs"]
 
