@@ -49,8 +49,12 @@ module FireAlerter
     def treat_lights_welf(welf)
       red, green, yellow, blue, white = *welf.bytes.map { |b| binary_to_bool(b) }
 
-      Helpers.log('Activación de consola: ' + [red, green, yellow, blue, white].join(', '))
-      if [red, green, yellow, blue, white].any? { |b| b == true }
+      Helpers.log(
+        'Sending intervention create:' + {
+          red: red, green: green, yellow: yellow, blue: blue, white: white
+        }.map { |k, v| [k, v].join(': ') }.join(', ')
+      )
+      if [red, green, yellow, blue, white].any?
         Helpers.create_intervention(
           red:    red,
           green:  green,
@@ -60,7 +64,7 @@ module FireAlerter
         )
       end
 
-      send_data '>CPCOK<'
+      respond_with '>CPCOK<'
     end
 
     def binary_to_bool(binary)
@@ -72,14 +76,14 @@ module FireAlerter
     end
 
     def treat_special_buttons(welf)
-      Helpers.log("Llego trama especial #{welf} #{welf.bytes}")
+      Helpers.log("Special welf #{welf} #{welf.bytes}")
       trap_signal, semaphore, hooter = *welf.bytes.map { |b| binary_to_bool(b) }
-      p 'trap, semaphore, hooter', trap_signal, semaphore, hooter
+      Helpers.log "trap: #{trap_signal}, semaphore: #{semaphore} , hooter: #{hooter}"
 
       if trap_signal
         msg = "-X GET #{$FIREHOUSE_HOST}/console_trap_sign"
         Helpers.redis.publish('async-curl', msg)
-        Helpers.log "Señal de personas atrapadas."
+        Helpers.log 'Sending trap people to last console intervention'
       end
 
       if semaphore
@@ -87,24 +91,24 @@ module FireAlerter
         Helpers.redis.setex('semaphore_is_active', timeout, 1)
         timeout = '%03d' % timeout
 
-        Helpers.log "Señal de semaforo. timeout: #{timeout}, mandando TSEM"
-        send_data ">TSEM#{timeout}<"
+        respond_with ">TSEM#{timeout}<", 'Semaphore signal'
       end
 
       if hooter
-        Helpers.log "Señal de sirena mayor.... no hacemos una goma"
+        Helpers.log "Hooter signal.... NOT IMPLEMENTED"
       end
 
-      Helpers.log "Publicando cambio en semaforo principal"
-      Helpers.redis.publish('main_semaphore_change', { semaphore: semaphore, hooter: hooter }.to_json)
+      if hooter || semaphore
+        Helpers.log "Sending change to main semaphore"
+        Helpers.redis.publish('main_semaphore_change', { semaphore: semaphore, hooter: hooter }.to_json)
+      end
 
-      send_data '>CPIOK<'
+      respond_with '>CPIOK<', 'Special signal'
     end
 
     def treat_gates(welf)
       gate1, gate2, gate3, gate4 = *welf.bytes
-      p 'gate 1..4: ', gate1, gate2, gate3, gate4
-      p "Welf: #{welf}"
+      Helpers.log "NOT IMPLEMENTED Gates: 1: #{gate1}, 2: #{gate2}, 3: #{gate3}, 4: #{gate4}, "
       # Llega CPP
       # Estados 1 2 y 3
       # 1 para la derecha [pro-reloj] | abrir
@@ -112,18 +116,16 @@ module FireAlerter
       # 3 para la izq [contra reloj] | cerrar
 
       ## do something
-      send_data '>CPPOK<'
+      respond_with '>CPPOK<', 'Gates'
     end
 
     def match_ok_data?(data)
-      device_exist? && data.match(
-        /(ok<$)/i
-      )
+      device_exist? && data.match(/ok<$/i)
     end
 
     def match_invalid_data?(data)
       invalid = device_exist? && data.match(/invalid/i)
-      Helpers.log "Recibimos una trama invalida desde #{device_name} => #{data}"
+      Helpers.log "Invalid welf from: #{device_name} => #{data}" if invalid
       invalid
     end
 
@@ -145,13 +147,10 @@ module FireAlerter
       />#(\w+)\[V(\d+\.\d+.\d+)\]-\((\d{3})\)</
     end
 
-    def keep_alive_regex(name)
-      case name
-        when 'SEMAFORO'
-          />S\((\d+)\)</
-
-        when 'CONSOLA'
-          />C\((\d+)\)</
+    def keep_alive_regex
+      case
+        when semaphore? then />S\((\d+)\)</
+        when console?   then />C\((\d+)\)</
       end
     end
 
@@ -172,20 +171,18 @@ module FireAlerter
     end
 
     def say_hi!
-      Helpers.log 'Say Hi'
-      send_data '>$?<'
+      respond_with '>$?<', 'Say hi'
     end
 
     def send_ok!
-      Helpers.log 'Ok'
-      send_data '>SOK<'
+      respond_with (console? ? '>COK<' : '>SOK<'), 'Ok'
     end
 
     def add_id_to_active_devices!(_, name, version, id)
       $clients[self.object_id] = OpenStruct.new(
-        id: id,
-        name: name,
-        version: version,
+        id:         id,
+        name:       name,
+        version:    version,
         connection: self
       )
 
@@ -203,22 +200,25 @@ module FireAlerter
       $clients.keys.include?(self.object_id)
     end
 
-    def client_timer?
+    def console?
       device_name == 'CONSOLA'
     end
 
+    def semaphore?
+      device_name == 'SEMAFORO'
+    end
+
     def send_time!
-      now = Helpers.time_now.strftime('>HORA[%H:%M:%S-%d/%m/%Y]<')
-      Helpers.log 'Timing = ' + now
-      send_data now
+      respond_with Helpers.time_now.strftime('>HORA[%H:%M:%S-%d/%m/%Y]<'), 'Timing'
     end
 
     def send_ok_or_time!
-      if (rand * 10) > 7 && client_timer?
-        send_time!
-      else
-        send_ok!
-      end
+      console? && ((rand * 10) > 7) ? send_time! : send_ok!
+    end
+
+    def respond_with(msg, extra = nil)
+      Helpers.log "Responding #{extra}: #{msg}"
+      send_data msg
     end
   end
 end

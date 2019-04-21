@@ -318,22 +318,24 @@ module FireAlerter
       def send_data_to_main_semaphore(msg)
         if (msc = main_semaphore_client)
           Helpers.log "Semaforo encontrado, #{msc.inspect} enviando: #{msg}"
-          Helpers.log "Semaforo encontrado, enviando: #{msg}"
           sleep 0.2 # For multiple messages on the same devise
           msc.connection.send_data msg
+        else
+          Helpers.log "Semaforo principa NO encontrado"
         end
       end
 
       def light_clients
-        $clients.map { |_, c| c if c.name == 'SEMAFORO' }.compact
+        $clients.select { |_, c| c.semaphore? }
       end
 
       def console_clients
-        $clients.map { |_, c| c if c.name == 'CONSOLA' }.compact
+        $clients.select { |_, c| c.console? }
       end
 
       def main_semaphore_client
-        $clients.map { |_, c| c if c.name == 'SEMAFORO' && c.id == '006' }.compact.first
+        main_id = Helpers.redis.get('configs:semaphore:main_id') || '006'
+        light_clients.select { |_, c| c.id == main_id }.first
       end
 
       def _clients
