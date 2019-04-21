@@ -13,11 +13,21 @@ end
 desc 'Start application [Default]'
 task :start do
   Bugsnag.configure do |config|
-    config.api_key = '106273f60a3e1fd9dc811c73d1844b2a'
+    config.api_key       = ENV['BUGSNAG_KEY']
     config.release_stage = 'production'
   end
 
   FireAlerter.start
+end
+
+desc 'Run Console'
+task :console do
+  require 'irb'
+  require 'irb/completion'
+  ARGV.clear
+  $stdout.sync = true
+
+  IRB.start
 end
 
 task default: [:start]

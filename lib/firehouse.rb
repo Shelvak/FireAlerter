@@ -5,10 +5,16 @@ module FireAlerter
     FIREHOUSE_HOST = ENV['SERVER_HOST'].freeze
 
     def create_intervention(colors)
+      return unless colors.values.any?
+
+      Helpers.log(
+        'Sending intervention create:' + colors.map { |k, v| [k, v].join(': ') }.join(', ')
+      )
       curl_to 'console_create', colors
     end
 
     def trap_signal!
+      Helpers.log 'Sending trap people to last console intervention'
       curl_to 'console_trap_sign'
     end
 

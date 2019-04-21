@@ -6,66 +6,68 @@ require 'thread'
 require File.expand_path('../ruby_hacks', __FILE__)
 
 module FireAlerter
-  $lib_path = File.expand_path('..', __FILE__)
-  $clients = {}
+  extend self
+  LIB_PATH    = File.expand_path('..', __FILE__)
 
-  autoload :Helpers,           $lib_path + '/helpers'
-  autoload :Firehouse,         $lib_path + '/firehouse'
-  autoload :DevicesConnection, $lib_path + '/devices_connection'
-  autoload :Looper,            $lib_path + '/looper'
-  autoload :Listener,          $lib_path + '/listener'
-  autoload :Crons,             $lib_path + '/crons'
+  $clients     = {}
+  $stdout.sync = true
 
-  class << self
-    def start
-      puts 'Subscribing...'
+  autoload :Client,            LIB_PATH + '/client'
+  autoload :Helpers,           LIB_PATH + '/helpers'
+  autoload :Firehouse,         LIB_PATH + '/firehouse'
+  autoload :DevicesConnection, LIB_PATH + '/devices_connection'
+  autoload :Looper,            LIB_PATH + '/looper'
+  autoload :Listener,          LIB_PATH + '/listener'
+  autoload :Crons,             LIB_PATH + '/crons'
 
-      init_alert_and_config
-      init_looper
-      init_broadcast
-      init_extras
+  def start
+    puts 'Subscribing...'
 
-      puts 'Starting server...'
-      Helpers.log 'Server started'
-      EventMachine.run { init_devices_connection }
-    end
+    init_alert_and_config
+    init_looper
+    init_broadcast
+    init_extras
 
-    def init_devices_connection
-      EventMachine.start_server('0.0.0.0', 9800, DevicesConnection)
-    end
+    puts 'Starting server...'
+    Helpers.log 'Server started'
+    EventMachine.run { init_devices_connection }
+  end
 
-    def init_broadcast
-      # Listener.start_broadcast_subscribe!
-      # sleep 1
-      Listener.stop_broadcast_subscribe!
-      sleep 1
-    end
+  def init_devices_connection
+    EventMachine.start_server('0.0.0.0', 9800, DevicesConnection)
+  end
 
-    def init_looper
-      Listener.lights_start_loop_subscribe!
-      sleep 1
-      Listener.lights_stop_loop_subscribe!
-      sleep 1
-    end
+  def init_broadcast
+    # Listener.start_broadcast_subscribe!
+    # sleep 1
+    Listener.stop_broadcast_subscribe!
+    sleep 1
+  end
 
-    def init_alert_and_config
-      Listener.lights_alert_subscribe!
-      sleep 1
-      Listener.lights_config_subscribe!
-      sleep 1
-      Listener.volume_config_subscribe!
-      sleep 1
-      Listener.lcd_subscribe!
-      sleep 1
-      Listener.main_semaphore_subscribe!
-      sleep 1
-    end
+  def init_looper
+    Listener.lights_start_loop_subscribe!
+    sleep 1
+    Listener.lights_stop_loop_subscribe!
+    sleep 1
+  end
 
-    def init_extras
-      Listener.curl_subscribe!
-      sleep 1
-      Listener.anything_subscribe!
-      sleep 1
-    end
+  def init_alert_and_config
+    Listener.lights_alert_subscribe!
+    sleep 1
+    Listener.lights_config_subscribe!
+    sleep 1
+    Listener.volume_config_subscribe!
+    sleep 1
+    Listener.lcd_subscribe!
+    sleep 1
+    Listener.main_semaphore_subscribe!
+    sleep 1
+  end
+
+  def init_extras
+    Listener.curl_subscribe!
+    sleep 1
+    Listener.anything_subscribe!
+    sleep 1
   end
 end

@@ -1,28 +1,48 @@
 module FireAlerter
   module DevicesConnection
+    # >#SEMAPHORE[V1.0.0]-(002)<
+    # [1: Name, 2: Version, 3: ID]
+    # [1: SEMAPHORE, 2: 1.0.0, 3: 002]
+    PRESENTATION_REGEX = />#(\w+)\[V(\d+\.\d+.\d+)\]-\((\d{3})\)</
+
     def post_init
-      Helpers.log "#{device_to_s} connected"
+      Helpers.log "#{device.to_s} connected"
     end
 
     def receive_data(data)
-      Helpers.log "#{device_to_s} Receive: #{data}"
+      Helpers.log "#{device&.to_s} Received: #{data}"
+
+      # Ensure device is presented or quit
+      unless device
+        Helpers.log 'Asking for presentation, >$?<'
+        send_data '>$?<'
+        return
+      end
+
 
       case
         when match_keep_alive?(data)
-          send_ok_or_time!
+          device.send_ok!
 
         when match_ok_data?(data), match_invalid_data?(data)
           nil
 
-        when (presentation = match_presentation(data))
+        when (presentation = match_presentation?(data))
           add_id_to_active_devices!(*presentation)
-          send_ok!
 
         when (welf = welf_recived?(data))
           treat_welf(*welf)
 
         else
-          say_hi!
+          msg = [
+            'UN-HANDLED DATA RECEIVED',
+            device.to_s,
+            data
+          ].join(' - ')
+          Helpers.log msg
+          report_error(msg)
+
+          nil
       end
     end
 
@@ -30,15 +50,39 @@ module FireAlerter
       remove_device_from_active_clients!
     end
 
-  private
+    private
 
-    def welf_recived?(data)
-      if device_exist? && (match = data.match(/>CP(\w)(.*)</))
-        match
-      end
+    ############################################################################
+    # DATA MATCHERS
+    ############################################################################
+    def match_ok_data?(data)
+      data.match?(/ok<$/i)
     end
 
-    def treat_welf(_, dev, welf)
+    def match_invalid_data?(data)
+      invalid = data.match?(/invalid/i)
+      Helpers.log "Invalid welf from: #{device&.name} => #{data}" if invalid
+      invalid
+    end
+
+    def match_keep_alive?(data)
+      (regex = device.keep_alive_regex) &&
+        (match = data.match(regex)&.captures) &&
+        match.first == device.id
+    end
+
+    def match_presentation?(data)
+      data.match(PRESENTATION_REGEX)&.captures
+    end
+
+    def welf_recived?(data)
+      data.match(/>CP(\w)(.*)</)&.captures
+    end
+
+    ############################################################################
+    # WELF HANDLERS
+    ############################################################################
+    def treat_welf(dev, welf)
       case dev
         when 'C' then treat_lights_welf(welf)
         when 'I' then treat_special_buttons(welf)
@@ -46,63 +90,40 @@ module FireAlerter
       end
     end
 
+    def welf_to_bool_list(welf)
+      welf.bytes.map { |b| b.to_i == 1 }
+    end
+
     def treat_lights_welf(welf)
-      red, green, yellow, blue, white = *welf.bytes.map { |b| binary_to_bool(b) }
+      red, green, yellow, blue, white = *welf_to_bool_list(welf)
 
-      Helpers.log(
-        'Sending intervention create:' + {
-          red: red, green: green, yellow: yellow, blue: blue, white: white
-        }.map { |k, v| [k, v].join(': ') }.join(', ')
+      Firehouse.create_intervention(
+        red:    red,
+        green:  green,
+        yellow: yellow,
+        blue:   blue,
+        white:  white
       )
-      if [red, green, yellow, blue, white].any?
-        Helpers.create_intervention(
-          red:    red,
-          green:  green,
-          yellow: yellow,
-          blue:   blue,
-          white:  white
-        )
-      end
 
-      respond_with '>CPCOK<'
-    end
-
-    def binary_to_bool(binary)
-      binary.to_i == 1
-    end
-
-    def semaphore_timeout
-      Helpers.redis.get('configs:semaphore:timeout') || 20
+      device.send '>CPCOK<'
     end
 
     def treat_special_buttons(welf)
-      Helpers.log("Special welf #{welf} #{welf.bytes}")
-      trap_signal, semaphore, hooter = *welf.bytes.map { |b| binary_to_bool(b) }
-      Helpers.log "trap: #{trap_signal}, semaphore: #{semaphore} , hooter: #{hooter}"
+      trap_signal, semaphore, hooter = *welf_to_bool_list(welf)
+      Helpers.log "Special welf => trap: #{trap_signal}, semaphore: #{semaphore} , hooter: #{hooter}"
 
-      if trap_signal
-        Helpers.log 'Sending trap people to last console intervention'
-        Firehouse.trap_signal!
-      end
+      Firehouse.trap_signal! if trap_signal
 
-      if semaphore
-        timeout = semaphore_timeout
-        Helpers.redis.setex('semaphore_is_active', timeout, 1)
-        timeout = '%03d' % timeout
+      device.send_special_semaphore_signal! if semaphore
 
-        respond_with ">TSEM#{timeout}<", 'Semaphore signal'
-      end
-
-      if hooter
-        Helpers.log "Hooter signal.... NOT IMPLEMENTED"
-      end
+      Helpers.log "Hooter signal.... NOT IMPLEMENTED" if hooter
 
       if hooter || semaphore
         Helpers.log "Sending change to main semaphore"
         Helpers.redis.publish('main_semaphore_change', { semaphore: semaphore, hooter: hooter }.to_json)
       end
 
-      respond_with '>CPIOK<', 'Special signal'
+      device.send '>CPIOK<', 'Special signal'
     end
 
     def treat_gates(welf)
@@ -115,109 +136,26 @@ module FireAlerter
       # 3 para la izq [contra reloj] | cerrar
 
       ## do something
-      respond_with '>CPPOK<', 'Gates'
+      device.send '>CPPOK<', 'Gates'
     end
 
-    def match_ok_data?(data)
-      device_exist? && data.match(/ok<$/i)
-    end
-
-    def match_invalid_data?(data)
-      invalid = device_exist? && data.match(/invalid/i)
-      Helpers.log "Invalid welf from: #{device_name} => #{data}" if invalid
-      invalid
-    end
-
-    def match_keep_alive?(data)
-      device_exist? &&
-        (regex = keep_alive_regex(device_name)) &&
-        (match = data.match(regex)) &&
-        match[1] == device_id
-    end
-
-    def match_presentation(data)
-      data.match(presentation_regex)
-    end
-
-    def presentation_regex
-      # >#SEMAPHORE[V1.0.0]-(002)<
-      # [1: Name, 2: Version, 3: ID]
-      # [1: SEMAPHORE, 2: 1.0.0, 3: 002]
-      />#(\w+)\[V(\d+\.\d+.\d+)\]-\((\d{3})\)</
-    end
-
-    def keep_alive_regex
-      case
-        when semaphore? then />S\((\d+)\)</
-        when console?   then />C\((\d+)\)</
-      end
-    end
-
-    def device_name
-      $clients[self.object_id].try(:name)
-    end
-
-    def device_id
-      $clients[self.object_id].try(:id)
-    end
-
+    ############################################################################
+    # DEVICE METHODS
+    ############################################################################
     def device
-      $clients[self.object_id]
+      Client.find(self.object_id)
     end
 
-    def device_to_s
-      device ? "(#{[device.name, device.id].join('-')})" : ''
-    end
+    def add_id_to_active_devices!(name, version, id)
+      Client.add(self, id, name, version)
 
-    def say_hi!
-      respond_with '>$?<', 'Say hi'
-    end
+      device.send_ok!
 
-    def send_ok!
-      respond_with (console? ? '>COK<' : '>SOK<'), 'Ok'
-    end
-
-    def add_id_to_active_devices!(_, name, version, id)
-      $clients[self.object_id] = OpenStruct.new(
-        id:         id,
-        name:       name,
-        version:    version,
-        connection: self
-      )
-
-      Helpers.log "#{device_to_s} added"
       Crons.send_init_config_to!(device)
     end
 
     def remove_device_from_active_clients!
-      Helpers.log "#{device_to_s} dropped"
-
-      $clients.delete(self.object_id)
-    end
-
-    def device_exist?
-      $clients.keys.include?(self.object_id)
-    end
-
-    def console?
-      device_name == 'CONSOLA'
-    end
-
-    def semaphore?
-      device_name == 'SEMAFORO'
-    end
-
-    def send_time!
-      respond_with Helpers.time_now.strftime('>HORA[%H:%M:%S-%d/%m/%Y]<'), 'Timing'
-    end
-
-    def send_ok_or_time!
-      console? && ((rand * 10) > 7) ? send_time! : send_ok!
-    end
-
-    def respond_with(msg, extra = nil)
-      Helpers.log "Responding #{extra}: #{msg}"
-      send_data msg
+      Client.remove(self.object_id)
     end
   end
 end
