@@ -81,9 +81,8 @@ module FireAlerter
       Helpers.log "trap: #{trap_signal}, semaphore: #{semaphore} , hooter: #{hooter}"
 
       if trap_signal
-        msg = "-X GET #{$FIREHOUSE_HOST}/console_trap_sign"
-        Helpers.redis.publish('async-curl', msg)
         Helpers.log 'Sending trap people to last console intervention'
+        Firehouse.trap_signal!
       end
 
       if semaphore

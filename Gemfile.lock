@@ -1,28 +1,20 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    bugsnag (2.8.6)
-      multi_json (~> 1.0)
+    bugsnag (6.11.1)
+      concurrent-ruby (~> 1.0)
     bugsnag-em (0.1)
       bugsnag
       eventmachine
       lspace (>= 0.13)
-    coderay (1.1.0)
-    eventmachine (1.0.7)
-    json (1.8.2)
-    lspace (0.13)
-    method_source (0.8.2)
-    multi_json (1.11.0)
-    pry (0.10.1)
-      coderay (~> 1.1.0)
-      method_source (~> 0.8.1)
-      slop (~> 3.4)
-    pry-nav (0.2.4)
-      pry (>= 0.9.10, < 0.11.0)
-    rake (10.4.2)
-    redis (3.2.1)
-    slop (3.6.0)
-    thread (0.2.0)
+    concurrent-ruby (1.1.5)
+    eventmachine (1.2.7)
+    irb (1.0.0)
+    json (2.2.0)
+    lspace (0.14)
+    rake (12.3.2)
+    redis (4.1.0)
+    thread (0.2.2)
 
 PLATFORMS
   ruby
@@ -30,8 +22,11 @@ PLATFORMS
 DEPENDENCIES
   bugsnag-em
   eventmachine
+  irb
   json
-  pry-nav
   rake
   redis
   thread
+
+BUNDLED WITH
+   1.17.2

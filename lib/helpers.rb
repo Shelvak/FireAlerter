@@ -36,7 +36,16 @@ module FireAlerter
       end
 
       def redis
-        Redis.new(host: $REDIS_HOST)
+        @redis_opts ||= begin
+                          opts = {
+                            host: ENV['REDIS_HOST'] || ENV['REDIS_PORT_6379_TCP_ADDR'] || 'localhost',
+                            port: ENV['REDIS_PORT'] || '6379'
+                          }
+                          opts.merge!(password: ENV['REDIS_PASS']) if ENV['REDIS_PASS']
+                          opts
+                        end
+
+        Redis.new(@redis_opts)
       end
 
       def time_now_to_s
@@ -48,17 +57,11 @@ module FireAlerter
         Time.now.utc - 10800
       end
 
-      def create_intervention(colors)
-        data = colors.map { |k, v| "-d #{k}=#{v} " }.join
-        msg = "-X GET #{$FIREHOUSE_HOST}/console_create #{data}"
-
-        Helpers.redis.publish('async-curl', msg)
-      end
 
       def logs_path
         return @@logs_path if @@logs_path
 
-        logs_path = ENV['logs_path']
+        logs_path = ENV['LOGS_PATH']
         logs_path ||= if File.writable_real?('/logs')
                         '/logs'
                       else

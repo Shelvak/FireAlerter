@@ -1,8 +1,16 @@
+require 'eventmachine'
+require 'json'
+require 'net/http'
+require 'redis'
+require 'thread'
+require File.expand_path('../ruby_hacks', __FILE__)
+
 module FireAlerter
   $lib_path = File.expand_path('..', __FILE__)
   $clients = {}
 
   autoload :Helpers,           $lib_path + '/helpers'
+  autoload :Firehouse,         $lib_path + '/firehouse'
   autoload :DevicesConnection, $lib_path + '/devices_connection'
   autoload :Looper,            $lib_path + '/looper'
   autoload :Listener,          $lib_path + '/listener'
