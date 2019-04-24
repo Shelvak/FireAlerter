@@ -16,13 +16,15 @@ module FireAlerter
 
     def get_and_send_volume_config(client)
       if (volume = Helpers.redis.get('volume'))
-        client.send ">VOL#{volume.to_i.chr}"
+        client.send ">VOL#{volume.to_i.chr}<"
       end
     end
 
     def get_and_send_light_configs(client)
       %w[day night stay].map do |kind|
+        Helpers.log("Lights: #{kind}")
         if (kind_config = Helpers.redis.get('lights-config-' + kind))
+          Helpers.log("Lights: #{kind}")
           begin
             # lights-config-kind return => { red: intensity, green: intensity}
             JSON.parse(kind_config).each do |color, intensity|

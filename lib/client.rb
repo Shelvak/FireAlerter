@@ -35,6 +35,23 @@ module FireAlerter
       clients.delete(object_id)
     end
 
+    def self.lights
+      clients.values.select(&:semaphore?)
+    end
+
+    def self.console
+      clients.values.find(&:console?)
+    end
+
+    def self.lcds
+      clients.values.select(&:lcd?)
+    end
+
+    def self.main_semaphore
+      main_id = Helpers.redis.get('configs:semaphore:main_id') || '006'
+      lights.select { |c| c.id == main_id }.first
+    end
+
     ############################################################################
     # INSTANCE METHODS
     ############################################################################
@@ -48,6 +65,10 @@ module FireAlerter
 
     def semaphore?
       name == 'SEMAFORO'
+    end
+
+    def lcd?
+      console?
     end
 
     # Skip loosing ruby `send` method

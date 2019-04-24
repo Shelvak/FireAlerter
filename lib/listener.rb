@@ -92,7 +92,7 @@ module FireAlerter
           begin
             opts = JSON.parse(msg)
             Helpers.log "Alert Subscriber: #{opts}"
-            assign_last_lights_alert(msg)
+            # assign_last_lights_alert(msg)
 
             send_welf_to_all(opts)
           rescue => e
@@ -226,6 +226,19 @@ module FireAlerter
       end
     end
 
+    def color_intensity_config_welf(opts)
+      kind = opts['kind']
+
+      [
+        62, 80, 87, 77,
+        color_number_for(opts['color']),
+        opts['intensity'],
+        bool_to_int(kind == 'stay'),
+        bool_to_int(kind == 'day'),
+        bool_to_int(kind == 'night'),
+        60
+      ].map(&:chr).join
+    end
 
     private
 
@@ -236,34 +249,18 @@ module FireAlerter
     def send_volume_to_lights!(volume)
       sleep 0.2
       msg = ">VOL#{volume.to_i.chr}<"
-      $clients.each { |_, c| c.connection.send_data(msg) }
+      Client.lights.each { |_, c| c.send(msg) }
     end
-
-    # def send_signal_to_start_brodcast!
-    #   send_msg_to_broadcast_clients('>PLAY<')
-    # end
-
-    # def send_signal_to_stop_brodcast!
-    #   send_msg_to_broadcast_clients('>STOP<')
-    # end
 
     def send_msg_to_broadcast_clients(msg)
-      broadcast_clients.each do |client|
+      Client.lights.each do |client|
         begin
           Helpers.log "Broadcast clients. msg: #{msg} to client: #{client}"
-          client.connection.send_data(msg)
+          client.send(msg)
         rescue => e
-          Helpers.log "Broadcast clients. EXPLOTO TODO VIEJAAAA #{e}"
+          Helpers.error "Broadcast clients. EXPLOTO TODO VIEJAAAA #{e}", e
         end
       end
-    end
-
-    def broadcast_clients
-      $clients.map { |_, c| c if broadcast_compatibility?(c) }.compact
-    end
-
-    def broadcast_compatibility?(client)
-      client.name == 'SEMAFORO'
     end
 
     def send_msg_to_lcds(opts)
@@ -282,54 +279,29 @@ module FireAlerter
         end
       end.compact
 
-      lcd_clients.each do |client|
-        msgs.each { |msg| client.connection.send_data(msg) && sleep(1) }
+      Client.lcds.each do |client|
+        msgs.each { |msg| client.send(msg) && sleep(1) }
       end
-    end
-
-    def lcd_clients
-      $clients.map { |_, c| c if lcd_compatibility?(c) }.compact
-    end
-
-    def lcd_compatibility?(connection)
-      connection.name == 'CONSOLA'
     end
 
     def send_data_to_lights(msg)
       sleep 0.2 # For multiple messages on the same devise
-      light_clients.each { |client| client.connection.send_data msg }
+      Client.lights.each { |client| client.send msg }
     end
 
     def send_data_to_consoles(msg)
       sleep 0.2 # For multiple messages on the same devise
-      console_clients.each { |client| client.connection.send_data msg }
+      Client.console.send msg
     end
 
     def send_data_to_main_semaphore(msg)
-      if (msc = main_semaphore_client)
+      if (msc = Client.main_semaphore)
         Helpers.log "Semaforo encontrado, #{msc.inspect} enviando: #{msg}"
         sleep 0.2 # For multiple messages on the same devise
-        msc.connection.send_data msg
+        msc.send msg
       else
         Helpers.log "Semaforo principa NO encontrado"
       end
-    end
-
-    def light_clients
-      $clients.select { |_, c| c.semaphore? }
-    end
-
-    def console_clients
-      $clients.select { |_, c| c.console? }
-    end
-
-    def main_semaphore_client
-      main_id = Helpers.redis.get('configs:semaphore:main_id') || '006'
-      light_clients.select { |_, c| c.id == main_id }.first
-    end
-
-    def _clients
-      $clients.map { |_, c| c if c.name == 'CONSOLA' }.compact
     end
 
     def send_welf_to_all(msg)
@@ -363,14 +335,15 @@ module FireAlerter
       )
     end
 
-    def last_lights_alert
-      last_lights = Helpers.redis.get('last_lights_alert')
-      JSON.parse(last_lights) if last_lights.to_s != ''
-    end
+    # No se reenvia mas  la ultima alerta
+    # def last_lights_alert
+    #   last_lights = Helpers.redis.get('last_lights_alert')
+    #   JSON.parse(last_lights) if last_lights.to_s != ''
+    # end
 
-    def assign_last_lights_alert(msg)
-      Helpers.redis.set('last_lights_alert', msg)
-    end
+    # def assign_last_lights_alert(msg)
+    #   Helpers.redis.set('last_lights_alert', msg)
+    # end
 
     # No se usa mas
     # def resend_last_alert
@@ -428,24 +401,10 @@ module FireAlerter
       ].map(&:chr).join
     end
 
-
     def semaphore_last_status
       Helpers.redis.get('semaphore_is_active') || 0
     end
 
-    def color_intensity_config_welf(opts)
-      kind = opts['kind']
-
-      [
-        62, 80, 87, 77,
-        color_number_for(opts['color']),
-        opts['intensity'],
-        bool_to_int(kind == 'stay'),
-        bool_to_int(kind == 'day'),
-        bool_to_int(kind == 'night'),
-        60
-      ].map(&:chr).join
-    end
 
     def color_number_for(color)
       case color.to_s

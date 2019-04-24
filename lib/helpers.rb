@@ -11,7 +11,8 @@ module FireAlerter
       error(string, ex)
     end
 
-    def error(string, ex)
+    def error(string, ex=nil)
+      ex = string if string.is_a?(Exception)
       report_error(ex)
 
       write_in_error_log([
@@ -25,6 +26,7 @@ module FireAlerter
     end
 
     def report_error(error)
+      puts error
       Bugsnag.notify(error)
     end
 
@@ -46,7 +48,7 @@ module FireAlerter
                           host: ENV['REDIS_HOST'] || ENV['REDIS_PORT_6379_TCP_ADDR'] || 'localhost',
                           port: ENV['REDIS_PORT'] || '6379'
                         }
-                        opts.merge!(password: ENV['REDIS_PASS']) if ENV['REDIS_PASS']
+                        # opts.merge!(password: ENV['REDIS_PASS']) if ENV['REDIS_PASS']
                         opts
                       end
 
