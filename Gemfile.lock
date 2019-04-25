@@ -1,18 +1,14 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    awesome_print (1.8.0)
     bugsnag (6.11.1)
       concurrent-ruby (~> 1.0)
-    bugsnag-em (0.1)
-      bugsnag
-      eventmachine
-      lspace (>= 0.13)
     byebug (11.0.1)
     concurrent-ruby (1.1.5)
     eventmachine (1.2.7)
     irb (1.0.0)
     json (2.2.0)
-    lspace (0.14)
     power_assert (1.1.4)
     rake (12.3.2)
     redis (4.1.0)
@@ -24,7 +20,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  bugsnag-em
+  awesome_print
+  bugsnag
   byebug
   eventmachine
   irb

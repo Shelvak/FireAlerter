@@ -1,7 +1,7 @@
 require 'rake'
 require 'rubygems'
 require 'bundler/setup'
-require 'bugsnag-em'
+require 'bugsnag'
 require 'rake/testtask'
 
 require File.expand_path('../lib/fire_alerter', __FILE__)

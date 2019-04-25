@@ -1,83 +1,83 @@
 module FireAlerter
   module Looper
-    class << self
-      @@looping = nil
+    extend self
 
-      def start_lights_looper!
-        stop_lights_looper!
+    def start_lights_looper!
+      stop_lights_looper!
 
-        @@looping = Thread.new { lights_looper }
+      @looping = Thread.new { lights_looper }
+    end
+
+    def stop_lights_looper!
+      @looping.exit if @looping
+    end
+
+    def lights_looper
+      # High Emergency is the most important so... the first
+      # Uniq method for any "troll" from redis or by the "coder"
+
+      # kind_with_time = {
+      #   'high:emergency' => high_emergency_time,
+      #   'high:urgency'   => high_urgency_time,
+      #   'low:emergency'  => low_emergency_time,
+      #   'low:urgency'    => low_urgency_time
+      # }
+
+
+      # kind_with_time.each do |kind, time|
+      #   Helpers.redis.lrange('interventions:' + kind, 0, -1).uniq.each do |id|
+      #   Helpers.redis.lrange('interventions:' + kind, 0, -1).uniq.each do |id|
+      #     send_intervention_lights!(id)
+      #     sleep time
+      #   end
+      # end
+
+      ids  = Helpers.redis.lrange('interventions:high:emergency', 0, -1)
+      ids += Helpers.redis.lrange('interventions:high:urgency', 0, -1)
+
+      # La idea es solo loopear en high o en low, no en los 2
+      if ids.empty?
+        ids  = Helpers.redis.lrange('interventions:low:emergency', 0, -1)
+        ids += Helpers.redis.lrange('interventions:low:urgency', 0, -1)
       end
 
-      def stop_lights_looper!
-        @@looping.exit unless @@looping.nil?
+      ids.uniq.each do |id|
+        send_intervention_lights!(id)
+        sleep 10
       end
 
-      def lights_looper
-        # High Emergency is the most important so... the first
-        # Uniq method for any "troll" from redis or by the "coder"
+      # Recall
+      lights_looper
+    end
 
-        # kind_with_time = {
-        #   'high:emergency' => high_emergency_time,
-        #   'high:urgency'   => high_urgency_time,
-        #   'low:emergency'  => low_emergency_time,
-        #   'low:urgency'    => low_urgency_time
-        # }
+    def send_intervention_lights!(id)
+      if (lights = Helpers.redis.get('interventions:' + id.to_s))
+        # Remove the priority bit
+        opts = JSON.parse(lights)
+        opts['priority'] = false
+        opts['day'] = (8..19).include?(Helpers.time_now.hour) # TODO: Cambiar esto por el sensor
 
-
-        # kind_with_time.each do |kind, time|
-        #   Helpers.redis.lrange('interventions:' + kind, 0, -1).uniq.each do |id|
-        #   Helpers.redis.lrange('interventions:' + kind, 0, -1).uniq.each do |id|
-        #     send_intervention_lights!(id)
-        #     sleep time
-        #   end
-        # end
-
-        ids  = Helpers.redis.lrange('interventions:high:emergency', 0, -1)
-        ids += Helpers.redis.lrange('interventions:high:urgency', 0, -1)
-
-        # La idea es solo loopear en high o en low, no en los 2
-        if ids.empty?
-          ids  = Helpers.redis.lrange('interventions:low:emergency', 0, -1)
-          ids += Helpers.redis.lrange('interventions:low:urgency', 0, -1)
-        end
-
-        ids.uniq.each do |id|
-          send_intervention_lights!(id)
-          sleep 10
-        end
-
-        # Recall
-        lights_looper
+        Helpers.log('Changed priority from ' + lights)
+        Helpers.redis.publish('semaphore-lights-alert', opts.to_json)
       end
+    rescue => e
+      Helpers.error(e)
+    end
 
-      def send_intervention_lights!(id)
-        if (lights = Helpers.redis.get('interventions:' + id.to_s))
-          # Remove the priority bit
-          opts = JSON.parse(lights)
-          opts['priority'] = false
-          opts['day'] = (8..19).include?(Time.now.hour) # TODO: Cambiar esto por el sensor
+    def high_emergency_time
+      Helpers.redis.get('interventions:time:high_emergency') || 10
+    end
 
-          Helpers.log('Changed priority from ' + lights)
-          Helpers.redis.publish('semaphore-lights-alert', opts.to_json)
-        end
-      end
+    def high_urgency_time
+      Helpers.redis.get('interventions:time:high_urgency') || 7
+    end
 
-      def high_emergency_time
-        Helpers.redis.get('interventions:time:high_emergency') || 10
-      end
+    def low_emergency_time
+      Helpers.redis.get('interventions:time:low_emergency') || 5
+    end
 
-      def high_urgency_time
-        Helpers.redis.get('interventions:time:high_urgency') || 7
-      end
-
-      def low_emergency_time
-        Helpers.redis.get('interventions:time:low_emergency') || 5
-      end
-
-      def low_urgency_time
-        Helpers.redis.get('interventions:time:low_urgency') || 2
-      end
+    def low_urgency_time
+      Helpers.redis.get('interventions:time:low_urgency') || 2
     end
   end
 end

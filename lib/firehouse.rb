@@ -11,11 +11,15 @@ module FireAlerter
         'Sending intervention create:' + colors.map { |k, v| [k, v].join(': ') }.join(', ')
       )
       curl_to 'console_create', colors
+    rescue => e
+      Helpers.error(e)
     end
 
     def trap_signal!
       Helpers.log 'Sending trap people to last console intervention'
       curl_to 'console_trap_sign'
+    rescue => e
+      Helpers.error(e)
     end
 
     def curl_to(path, extras = {})
@@ -25,6 +29,8 @@ module FireAlerter
 
       Helpers.log "Async firehouse curl #{msg}"
       Helpers.redis.publish('async-curl', msg)
+    rescue => e
+      Helpers.error(e)
     end
   end
 end

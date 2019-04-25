@@ -45,10 +45,14 @@ module FireAlerter
 
           nil
       end
+    rescue => e
+      Helpers.error(e)
     end
 
     def unbind
       remove_device_from_active_clients!
+    rescue => e
+      Helpers.error(e)
     end
 
     private

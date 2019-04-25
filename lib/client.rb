@@ -74,7 +74,7 @@ module FireAlerter
     # Skip loosing ruby `send` method
     alias_method :old_send, :send
     def send(msg, extra=nil)
-      Helpers.log "Responding #{extra}: #{msg}"
+      Helpers.log "#{self.to_s} Responding #{extra}: #{msg}"
       connection.send_data msg
     end
 
