@@ -173,7 +173,7 @@ module FireAlerter
           begin
             Helpers.log "Mandando lo que venga #{msg}"
 
-            $clients.each { |_, c| c.connection.send_data(msg) }
+            Client.clients.each { |_, c| c.send(msg) }
           rescue => e
             Helpers.error "Mandando lo que llega #{msg}", e
           end
@@ -249,7 +249,7 @@ module FireAlerter
     def send_volume_to_lights!(volume)
       sleep 0.2
       msg = ">VOL#{volume.to_i.chr}<"
-      Client.lights.each { |_, c| c.send(msg) }
+      Client.lights.each { |c| c.send(msg) }
     end
 
     def send_msg_to_broadcast_clients(msg)
@@ -291,7 +291,7 @@ module FireAlerter
 
     def send_data_to_consoles(msg)
       sleep 0.2 # For multiple messages on the same devise
-      Client.console.send msg
+      Client.console&.send msg
     end
 
     def send_data_to_main_semaphore(msg)
