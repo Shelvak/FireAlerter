@@ -6,7 +6,7 @@ class DevicesConnectionTest < Test::Unit::TestCase
       '', ">#SEMAFORO[V1.0.0]-(001)<"
     )
 
-    assert_equal ['>$?<', '>SOK<'], results[:responsed]
+    assert_empty ['>$?<', '>SOK<'] - results[:responsed]
   end
 
   def test_console_presentation_and_lights
@@ -15,6 +15,6 @@ class DevicesConnectionTest < Test::Unit::TestCase
       [62, 67, 80, 67, 1, 0, 1, 1, 1, 60].map(&:chr).join
     )
 
-    assert_equal ['>COK<', '>CPCOK<'], results[:responsed]
+    assert_empty ['>COK<', '>CPCOK<'] - results[:responsed]
   end
 end

@@ -1,5 +1,7 @@
 require 'test/unit'
 require 'byebug'
+require 'awesome_print'
+require 'bugsnag'
 
 require File.expand_path('../../lib/fire_alerter', __FILE__)
 

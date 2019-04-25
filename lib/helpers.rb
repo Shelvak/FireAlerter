@@ -20,7 +20,7 @@ module FireAlerter
     end
 
     def report_error(error)
-      Bugsnag.notify(error)
+      ::Bugsnag.notify(error)
     end
 
     def logger

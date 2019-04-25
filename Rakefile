@@ -8,7 +8,7 @@ require File.expand_path('../lib/fire_alerter', __FILE__)
 
 desc 'Start application [Default]'
 task :start do
-  Bugsnag.configure do |config|
+  ::Bugsnag.configure do |config|
     config.api_key       = ENV['BUGSNAG_KEY']
     config.release_stage = 'production'
   end
