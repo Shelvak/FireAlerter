@@ -25,7 +25,7 @@ module FireAlerter
 
     def logger
       @logger ||= begin
-                    logger = ::Logger.new(logs_path + '/firealerter.log')
+                    logger = ::Logger.new(logs_path + '/firealerter.log', 10, 10_485_760) # keep 10, 10Mb
                     logger.formatter = proc do |severity, datetime, progname, msg|
                       "#{datetime.strftime('%Y-%m-%d %H:%M:%S')} [#{severity}] #{msg}\n"
                     end
