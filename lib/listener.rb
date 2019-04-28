@@ -92,7 +92,7 @@ module FireAlerter
           begin
             opts = JSON.parse(msg)
             Helpers.log "Alert Subscriber: #{opts}"
-            # assign_last_lights_alert(msg)
+            assign_last_lights_alert(msg)
 
             send_welf_to_all(opts)
           rescue => e
@@ -335,17 +335,16 @@ module FireAlerter
       )
     end
 
-    # No se reenvia mas  la ultima alerta
+    def assign_last_lights_alert(msg)
+      Helpers.redis.set('last_lights_alert', msg)
+    end
+
+    # No se usa mas
     # def last_lights_alert
     #   last_lights = Helpers.redis.get('last_lights_alert')
     #   JSON.parse(last_lights) if last_lights.to_s != ''
     # end
 
-    # def assign_last_lights_alert(msg)
-    #   Helpers.redis.set('last_lights_alert', msg)
-    # end
-
-    # No se usa mas
     # def resend_last_alert
     #   last_lights = last_lights_alert
     #   send_welf_to_all(last_lights) if last_lights

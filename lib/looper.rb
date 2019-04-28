@@ -57,7 +57,7 @@ module FireAlerter
         opts['priority'] = false
         opts['day'] = (8..19).include?(Helpers.time_now.hour) # TODO: Cambiar esto por el sensor
 
-        Helpers.log('Changed priority from ' + lights)
+        Helpers.log('Changed priority to: ' + lights)
         Helpers.redis.publish('semaphore-lights-alert', opts.to_json)
       end
     rescue => e
