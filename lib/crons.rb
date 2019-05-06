@@ -2,6 +2,22 @@ module FireAlerter
   module Crons
     extend self
 
+    def send_console_time!
+      Helpers.log '[Thread] Starting console time loop'
+      Thread.new { send_console_time }
+    end
+
+    def send_console_time
+      loop do
+        Client.console&.send_time!
+        sleep 3600
+      end
+    rescue => e
+      Helpers.error(e)
+      sleep 10
+      retry
+    end
+
     def send_init_config_to!(client)
       Helpers.log '[Thread] Sending light config'
       Thread.new { send_init_config_to(client) }

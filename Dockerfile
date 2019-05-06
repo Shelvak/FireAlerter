@@ -7,7 +7,7 @@ RUN chmod 777 "$BUNDLE_BIN"
 
 RUN echo "gem: --no-rdoc --no-ri" >> ~/.gemrc \
     && apk --update add --virtual build-dependencies build-base \
-    && apk --update add bash openssl zlib tzdata git openssh \
+    && apk --update add bash openssl zlib tzdata git openssh curl \
     && gem install bundler
 
 RUN git clone --depth 1 https://github.com/Shelvak/FireAlerter.git /usr/src/firealerter

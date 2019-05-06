@@ -64,6 +64,8 @@ module FireAlerter
     sleep 1
     Listener.main_semaphore_subscribe!
     sleep 1
+    Crons.send_console_time!
+    sleep 1
   end
 
   def init_extras

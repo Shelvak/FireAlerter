@@ -121,12 +121,8 @@ module FireAlerter
 
       device.send_special_semaphore_signal! if semaphore
 
-      Helpers.log "Hooter signal.... NOT IMPLEMENTED" if hooter
-
-      if hooter || semaphore
-        Helpers.log "Sending change to main semaphore"
-        Helpers.redis.publish('main_semaphore_change', { semaphore: semaphore, hooter: hooter }.to_json)
-      end
+      Helpers.log "Sending change to main semaphore"
+      Helpers.redis.publish('main_semaphore_change', { semaphore: semaphore, hooter: hooter }.to_json)
 
       device.send '>CPIOK<', 'Special signal'
     end
@@ -156,7 +152,10 @@ module FireAlerter
 
       device.send_ok!
 
-      Crons.send_init_config_to!(device)
+      case
+        when device.semaphore? then Crons.send_init_config_to!(device)
+        when device.console?   then device.send_time!
+      end
     end
 
     def remove_device_from_active_clients!

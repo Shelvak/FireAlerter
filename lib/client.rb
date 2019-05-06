@@ -90,6 +90,7 @@ module FireAlerter
     end
 
     def send_time!
+      # Mandar cada 1 hora
       send Helpers.time_now.strftime('>HORA[%H:%M:%S-%d/%m/%Y]<'), 'Timing'
     end
 
