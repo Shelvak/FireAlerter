@@ -296,7 +296,7 @@ module FireAlerter
 
     def send_data_to_main_semaphore(msg)
       if (msc = Client.main_semaphore)
-        Helpers.log "Semaforo encontrado, #{msc.inspect} enviando: #{msg}"
+        Helpers.log "Semaforo encontrado, #{msc.to_s} enviando: #{msg}"
         sleep 0.2 # For multiple messages on the same devise
         msc.send msg
       else
