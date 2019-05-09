@@ -27,7 +27,7 @@ module FireAlerter
       @logger ||= begin
                     logger = ::Logger.new(logs_path + '/firealerter.log', 10, 10_485_760) # keep 10, 10Mb
                     logger.formatter = proc do |severity, datetime, progname, msg|
-                      "#{datetime.in_time_zone('Buenos Aires').strftime('%Y-%m-%d %H:%M:%S')} [#{severity}] #{msg}\n"
+                      "#{(datetime.utc + Time.zone_offset('-0300').to_i).strftime('%Y-%m-%d %H:%M:%S')} [#{severity}] #{msg}\n"
                     end
                     logger
                   end
