@@ -34,6 +34,9 @@ module FireAlerter
         when (welf = welf_recived?(data))
           treat_welf(*welf)
 
+        when match_presentation?(data)
+          device.send_ok!
+
         else
           msg = [
             'UN-HANDLED DATA RECEIVED',
@@ -41,7 +44,7 @@ module FireAlerter
             data
           ].join(' - ')
           Helpers.log msg
-          report_error(msg)
+          Helpers.report_error(msg)
 
           nil
       end
