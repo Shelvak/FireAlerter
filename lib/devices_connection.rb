@@ -7,6 +7,10 @@ module FireAlerter
 
     def post_init
       Helpers.log "#{device.to_s} connected"
+      set_sock_opt(Socket::SOL_SOCKET, Socket::SO_KEEPALIVE, true)
+      set_sock_opt(Socket::SOL_TCP, Socket::TCP_KEEPIDLE, 50)
+      set_sock_opt(Socket::SOL_TCP, Socket::TCP_KEEPINTVL, 10)
+      set_sock_opt(Socket::SOL_TCP, Socket::TCP_KEEPCNT, 5)
     end
 
     def receive_data(data)
