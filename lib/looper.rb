@@ -32,22 +32,23 @@ module FireAlerter
       #   end
       # end
 
-      ids  = Helpers.redis.lrange('interventions:high:emergency', 0, -1)
-      ids += Helpers.redis.lrange('interventions:high:urgency', 0, -1)
+      loop do
+        ids  = Helpers.redis.lrange('interventions:high:emergency', 0, -1)
+        ids += Helpers.redis.lrange('interventions:high:urgency', 0, -1)
 
-      # La idea es solo loopear en high o en low, no en los 2
-      if ids.empty?
-        ids  = Helpers.redis.lrange('interventions:low:emergency', 0, -1)
-        ids += Helpers.redis.lrange('interventions:low:urgency', 0, -1)
+        # La idea es solo loopear en high o en low, no en los 2
+        if ids.empty?
+          ids  = Helpers.redis.lrange('interventions:low:emergency', 0, -1)
+          ids += Helpers.redis.lrange('interventions:low:urgency', 0, -1)
+        end
+
+        ids.uniq.each do |id|
+          send_intervention_lights!(id)
+          sleep 10
+        end
+
+        sleep 2 if ids.empty?
       end
-
-      ids.uniq.each do |id|
-        send_intervention_lights!(id)
-        sleep 10
-      end
-
-      # Recall
-      lights_looper
     end
 
     def send_intervention_lights!(id)
@@ -58,7 +59,7 @@ module FireAlerter
         opts['day'] = (8..19).include?(Helpers.time_now.hour) # TODO: Cambiar esto por el sensor
 
         Helpers.log('Changed priority to: ' + lights)
-        Helpers.redis.publish('semaphore-lights-alert', opts.to_json)
+        Helpers.redis.publish('semaphore-lights-alert', opts.merge(skip_console: true).to_json)
       end
     rescue => e
       Helpers.error(e)

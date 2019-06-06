@@ -12,10 +12,10 @@ module FireAlerter
       ex = string if string.is_a?(Exception)
       report_error(ex)
 
-      logger.error(string)
+      logger.error("string error: " + string)
       if ex
         logger.error(ex)
-        logger.error(ex.backtrace.join("\n"))
+        logger.error(ex.backtrace.join("\n")) if ex.try(:backtrace).present?
       end
     end
 

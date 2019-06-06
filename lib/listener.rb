@@ -94,7 +94,11 @@ module FireAlerter
             Helpers.log "Alert Subscriber: #{opts}"
             assign_last_lights_alert(msg)
 
-            send_welf_to_all(opts)
+            if opts.delete(:skip_console) || opts.delete('skip_console')
+              send_data_to_lights lights_welf(opts)
+            else
+              send_welf_to_all(opts)
+            end
           rescue => e
             Helpers.error 'Alert Subscriber', e
           end
