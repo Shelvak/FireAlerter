@@ -1,6 +1,6 @@
 module FireAlerter
   module Firehouse
-    extend self
+    module_function
 
     FIREHOUSE_HOST = ENV['SERVER_HOST'].freeze
 

@@ -1,11 +1,14 @@
 module FireAlerter
   module Looper
-    extend self
+    module_function
 
     def start_lights_looper!
       stop_lights_looper!
 
-      @looping = Thread.new { lights_looper }
+      @looping = Helpers.thread { lights_looper }
+    rescue => e
+      Helpers.before_retry(e)
+      retry
     end
 
     def stop_lights_looper!
@@ -49,6 +52,12 @@ module FireAlerter
 
         sleep 2 if ids.empty?
       end
+
+      # Recall
+      lights_looper
+    rescue => e
+      Helpers.before_retry(e)
+      retry
     end
 
     def send_intervention_lights!(id)

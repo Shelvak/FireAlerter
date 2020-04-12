@@ -1,58 +1,88 @@
 module FireAlerter
   module Listener
-    extend self
+    module_function
 
     ### Send lights
     def lights_alert_subscribe!
-      Thread.new { lights_alert_subscribe }
+      Helpers.thread { lights_alert_subscribe }
+    rescue => e
+      Helpers.before_retry(e)
+      retry
     end
 
     ### Lights configuration
     def lights_config_subscribe!
-      Thread.new { lights_config_subscribe }
+      Helpers.thread { lights_config_subscribe }
+    rescue => e
+      Helpers.before_retry(e)
+      retry
     end
 
     ### Loop between current interventions
     def lights_start_loop_subscribe!
-      Thread.new { lights_start_loop_subscribe }
+      Helpers.thread { lights_start_loop_subscribe }
+    rescue => e
+      Helpers.before_retry(e)
+      retry
     end
 
     def lights_stop_loop_subscribe!
-      Thread.new { lights_stop_loop_subscribe }
+      Helpers.thread { lights_stop_loop_subscribe }
+    rescue => e
+      Helpers.before_retry(e)
+      retry
     end
 
     ### BROADCAST
     # def start_broadcast_subscribe!
     #   puts 'Start Broadcast'
-    #   Thread.new { start_broadcast_subscribe }
+    #   Helpers.thread { start_broadcast_subscribe }
     # end
 
     def stop_broadcast_subscribe!
-      Thread.new { stop_broadcast_subscribe }
+      Helpers.thread { stop_broadcast_subscribe }
+    rescue => e
+      Helpers.before_retry(e)
+      retry
     end
 
     ### Volume Config
     def volume_config_subscribe!
-      Thread.new { volume_config_subscribe }
+      Helpers.thread { volume_config_subscribe }
+    rescue => e
+      Helpers.before_retry(e)
+      retry
     end
 
     ### LCD messages
     def lcd_subscribe!
-      Thread.new { lcd_subscribe }
+      Helpers.thread { lcd_subscribe }
+    rescue => e
+      Helpers.before_retry(e)
+      retry
     end
 
     ### Async console intervention creation
     def curl_subscribe!
-      Thread.new { curl_subscribe }
+      Helpers.thread { curl_subscribe }
+    rescue => e
+      Helpers.before_retry(e)
+      retry
     end
 
     ### Test welf
     def anything_subscribe!
-      Thread.new { anything_subscribe }
+      Helpers.thread { anything_subscribe }
+    rescue => e
+      Helpers.before_retry(e)
+      retry
     end
 
     def main_semaphore_subscribe!
-      Thread.new { main_semaphore_subscribe }
+      Helpers.thread { main_semaphore_subscribe }
+    rescue => e
+      Helpers.before_retry(e)
+      retry
     end
 
     #####################

@@ -6,11 +6,14 @@ require 'thread'
 require File.expand_path('../ruby_hacks', __FILE__)
 
 module FireAlerter
-  extend self
+  module_function
   LIB_PATH    = File.expand_path('..', __FILE__)
 
+  $threads     = {}
   $clients     = {}
   $stdout.sync = true
+
+  Thread.abort_on_exception = true
 
   autoload :Client,            LIB_PATH + '/client'
   autoload :Helpers,           LIB_PATH + '/helpers'
@@ -19,6 +22,8 @@ module FireAlerter
   autoload :Looper,            LIB_PATH + '/looper'
   autoload :Listener,          LIB_PATH + '/listener'
   autoload :Crons,             LIB_PATH + '/crons'
+
+
 
   def start
     puts 'Subscribing...'
@@ -31,6 +36,13 @@ module FireAlerter
     puts 'Starting server...'
     Helpers.log 'Server started'
     init_devices_connection
+  rescue => e
+    Helpers.error(e) rescue nil # just in case
+
+    $threads.each { |_, t| t.kill rescue nil }
+    $threads = {}
+
+    retry
   end
 
   def init_devices_connection(port=9800)

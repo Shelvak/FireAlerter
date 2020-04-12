@@ -1,6 +1,16 @@
 module FireAlerter
   module Helpers
-    extend self
+    module_function
+
+    LOGGER_FORMATTER = proc do |severity, datetime, progname, msg|
+      [
+        (datetime.utc + Time.zone_offset('-0300').to_i).strftime('%Y-%m-%d %H:%M:%S'),
+        "[#{severity}]",
+        msg,
+        "\n"
+      ].join ' '
+    end
+
 
     def log(string = '')
       logger.info transliterate_the_byte(string)
@@ -12,10 +22,10 @@ module FireAlerter
       ex = string if string.is_a?(Exception)
       report_error(ex)
 
-      logger.error("string error: " + string)
+      error_logger.error(string)
       if ex
-        logger.error(ex)
-        logger.error(ex.backtrace.join("\n")) if ex.try(:backtrace).present?
+        error_logger.error(ex)
+        error_logger.error(ex.backtrace.join("\n")) if ex.try(:backtrace).present?
       end
     end
 
@@ -26,12 +36,20 @@ module FireAlerter
     def logger
       @logger ||= begin
                     logger = ::Logger.new(logs_path + '/firealerter.log', 10, 10_485_760) # keep 10, 10Mb
-                    logger.formatter = proc do |severity, datetime, progname, msg|
-                      "#{(datetime.utc + Time.zone_offset('-0300').to_i).strftime('%Y-%m-%d %H:%M:%S')} [#{severity}] #{msg}\n"
-                    end
+                    logger.formatter = LOGGER_FORMATTER
                     logger
                   end
     end
+
+    def error_logger
+      @error_logger ||= begin
+                    logger = ::Logger.new(logs_path + '/firealerter_error.log', 10, 10_485_760) # keep 10, 10Mb
+                    logger.formatter = LOGGER_FORMATTER
+
+                    logger
+                  end
+    end
+
 
     def redis
       @redis_opts ||= begin
@@ -39,7 +57,7 @@ module FireAlerter
                           host: ENV['REDIS_HOST'] || ENV['REDIS_PORT_6379_TCP_ADDR'] || 'localhost',
                           port: ENV['REDIS_PORT'] || '6379'
                         }
-                        # opts.merge!(password: ENV['REDIS_PASS']) if ENV['REDIS_PASS']
+                        opts.merge!(password: ENV['REDIS_PASS']) if ENV['REDIS_PASS']
                         opts
                       end
 
@@ -48,7 +66,7 @@ module FireAlerter
 
     def time_now
       # Argentina Offset
-      Time.now.utc - 10800
+      Time.now.utc + Time.zone_offset('-0300').to_i
     end
 
 
@@ -67,6 +85,31 @@ module FireAlerter
       transliterated = ''
       string.each_byte { |b| transliterated += ((0..10).include?(b) ? b : b.chr).to_s }
       transliterated
+    end
+
+    def thread
+      name = caller_name(caller[0])
+
+      $threads[name]&.kill rescue nil
+
+      log("[THREAD] Starting #{name}")
+
+      t = Thread.new { yield }
+
+      $threads[name] = t
+
+      t
+    end
+
+    def before_retry(e)
+      Helpers.error(e)
+      sleep 2
+      Helpers.log "RETRYING: #{caller_name caller[1]} (#{e})"
+    end
+
+    def caller_name(name)
+      klass, method_name = *name.split("/").last.scan(/(.*)\.rb.*:in `(.*)'/).flatten
+      "#{klass&.capitalize}.#{method_name}"
     end
   end
 end
