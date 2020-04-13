@@ -274,8 +274,6 @@ module FireAlerter
       ].map(&:chr).join
     end
 
-    private
-
     def force_stop_broadcast!
       Helpers.redis.publish('force-stop-broadcast', 'stop it')
     end

@@ -25,7 +25,7 @@ module FireAlerter
       error_logger.error(string)
       if ex
         error_logger.error(ex)
-        error_logger.error(ex.backtrace.join("\n")) if ex.try(:backtrace).present?
+        error_logger.error(ex.backtrace.join("\n")) rescue nil
       end
     end
 
